@@ -7,8 +7,11 @@ def index():
 
 @app.route('/submit', methods=['POST'])
 def crawl():
-	#function to route data to webcrawler
-	return 1
+
+	#webcrawler call goes here
+
+	#temporary template to show posted data
+	return render_template('show_data.html', url=request.form['url'], limit=request.form['limit'])
 
 if __name__ == "__main__":
 	app.run()
