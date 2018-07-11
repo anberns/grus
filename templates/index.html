@@ -23,11 +23,11 @@
 					{% if crawls %} {% for crawl in crawls %}
 					<li class="list-group-item d-flex justify-content-between lh-condensed">
 						<div>
-							<h6 class="my-0">{{crawl.website}}</h6>
-							<small class="text-muted">{{crawl.type}} - {{crawl.limit}}</small>
+							<h6 class="my-0">{{crawl.url}}</h6>
+							<small class="text-muted">{{ "Breadth" if crawl.type == "bfs" else "Depth" }} First Search - {{crawl.limit}}</small>
 						</div>
 						{% if crawl.keyword %}
-						<span class={{ "text-success" if crawl.success else "text-muted" }}>$12</span>
+						<span class={{ "text-success" if crawl.success else "text-muted" }}>{{crawl.keyword}}</span>
 						{% endif %}
 					</li>
 					{% endfor %} {% else %}
