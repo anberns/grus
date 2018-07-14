@@ -24,6 +24,7 @@ from urlparse import urljoin
 import requests
 import validators
 from bs4 import BeautifulSoup
+import time
 
 
 def parsePage(URL):
@@ -39,6 +40,7 @@ def parsePage(URL):
 
 	else:
 		print "Error loading page: ", response.status_code
+		return None
 
 def findPageTitle(soup):
 	#finds the first title tag
@@ -72,30 +74,34 @@ def addLinkstoStack(base, soup, stack):
 			url = urljoin(base, url)
 
 		#verifies link found is valid url and not a duplicate
-		if validators.url(url) and url not in list(stack.queue):
+		if validators.url(url): #and url not in list(stack.queue):
 			stack.put(url)
 			
 
 #testing functions 
 def main():
-	q = Queue.Queue()
 
 	#testing with hardcoded base url
-	url = "https://www.amazon.com"
-	page = parsePage(url)
+	urls = ["http://www.google.com", "http://www.khanacademy.org", "http://www.github.com"]
+	for url in urls:
+		q = Queue.Queue()
+		start = time.time()
+		page = parsePage(url)
 
-	title = findPageTitle(page)
+		title = findPageTitle(page)
 
-	#testing page's title
-	print "Title of page being parsed: ", title
+		#testing page's title
+		print "Title of page being parsed: ", title
 
-	addLinkstoQueue(url, page, q)
+		addLinkstoQueue(url, page, q)
 
-	#testing - prints the links in the queue and the total count
-	count = 0
-	for link in list(q.queue):
-		print(link)
-		count += 1
-	print "Total Links in Queue: ", count
+		#testing - prints the links in the queue and the total count
+		count = 0
+		for link in list(q.queue):
+			print(link)
+			count += 1
+		print "Total Links in Queue: ", count
+		end = time.time()
+		print(end - start)
 
 main()
