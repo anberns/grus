@@ -1,6 +1,6 @@
 #pip install BeautifulSoup4
 #pip install validators
-#pipenv install requests
+#pip install selenium
 
 # References:
 #	https://www.digitalocean.com/community/tutorials/how-to-scrape-web-pages-with-beautiful-soup-and-python-3
@@ -87,7 +87,7 @@ def main():
 
 	for url in urls:
 		q = Queue.Queue()
-		start= time.time ()
+		#start= time.time ()
 		page = parsePage(url, browser)
 		title = findPageTitle(page)
 
@@ -102,7 +102,7 @@ def main():
 			print(link)
 			count += 1
 		print "Total Links in Queue: ", count
-		end = time.time()
-		print(end - start)
+		#end = time.time()
+		#print(end - start)
 
 main()

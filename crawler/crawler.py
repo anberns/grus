@@ -85,7 +85,7 @@ def main():
 	urls = ["http://www.google.com", "http://www.khanacademy.org", "http://www.github.com"]
 	for url in urls:
 		q = Queue.Queue()
-		start = time.time()
+		#start = time.time()
 		page = parsePage(url)
 
 		title = findPageTitle(page)
@@ -101,7 +101,7 @@ def main():
 			print(link)
 			count += 1
 		print "Total Links in Queue: ", count
-		end = time.time()
-		print(end - start)
+		#end = time.time()
+		#print(end - start)
 
 main()
