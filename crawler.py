@@ -29,6 +29,11 @@ import json
 import collections
 import queue
 
+# change path to chrome binary for heroku
+#comment out for local instances
+ChromeOptions options = new ChromeOptions()
+options.setBinary("/app/.apt/usr/bin/google-chrome")
+
 #import time
 
 #class Logger:
@@ -60,7 +65,7 @@ class Spider(object):
 		print((json.dumps(self.visited, indent=4)))
 
 	def getVisited(self):
-		return dict(self.visited)
+		return self.visited
 
 
 
