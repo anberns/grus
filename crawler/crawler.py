@@ -203,32 +203,34 @@ class DFS(Spider):
 
 
 #testing functions 
-def main():
+def crawl(url, limit, sType, keyword):
 	chrome_options = Options()
 	chrome_options.add_argument("--headless")
 	browser = webdriver.Chrome(chrome_options=chrome_options, executable_path="./chromedriver")
 
-	limit = 2
-	keyword = None
+	#limit = 2
+	#keyword = None
 
 	#testing with hardcoded base url with test pages structure
-	test_url = "http://www.bomanbo.com/"
+	#test_url = "http://www.bomanbo.com/"
 
 	
-	print("DFS on " + test_url) 
-	crawler = DFS(browser, test_url, limit, keyword)
-	crawler.search()
-	crawler.printVisited()
-	#crawler.printConnections()
+	if sType == "dfs":
+		print("DFS on " + url) 
+		crawler = DFS(browser, url, limit, keyword)
+		crawler.search()
+		crawler.printVisited()
+		#crawler.printConnections()
 	
-
-	print("BFS on " + test_url)
-	crawler = BFS(browser, test_url, limit, keyword)
-	crawler.search()
-	crawler.printVisited()
-	#crawler.printConnections()
+	else:
+		print("BFS on " + url)
+		crawler = BFS(browser, url, limit, keyword)
+		crawler.search()
+		crawler.printVisited()
+		#crawler.printConnections()
 
 	browser.quit()
+	
+	return crawler.getVisited()
 
-
-main()
+#main()

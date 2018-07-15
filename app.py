@@ -1,4 +1,7 @@
 import uuid
+import json
+import sys
+import crawler
 from flask import Flask, request, render_template, make_response 
 from flask_pymongo import PyMongo
 app = Flask(__name__)
@@ -26,22 +29,22 @@ def index():
 def crawl():
 
 	userId = request.cookies.get('userId')
-	url = request.form['url']
+	url = "https://" + request.form['url']
 	limit = request.form['limit']
 	sType = request.form['type']
 	keyword = request.form['keyword']
 
 	#webcrawler call goes here
-	#crawlData = callCrawler(url, limit, sType, keyword)
+	crawlData = json.dumps(crawler.crawl(url, int(limit), sType, keyword))
 
-	crawlData = {"path" : {"start" : request.form['url'], "1" : "www.test1.com", "2" : "www.test2.com", "3" : "www.test3.com", "4" : "www.test4.com"}, "found" : 'false' }
+	#crawlData = {"path" : {"start" : request.form['url'], "1" : "www.test1.com", "2" : "www.test2.com", "3" : "www.test3.com", "4" : "www.test4.com"}, "found" : 'false' }
 
 	#temporary template to show posted data
 	#return render_template('show_data.html', data=crawlData)
 
 	#store search in database
 	test = mongo.db.test #access test collection
-	postid = test.insert({'userId' : userId, 'url': url, 'limit': limit, 'sType' : sType, 'keyword' : keyword, 'path' : crawlData.get('path'), 'found' : crawlData.get('found')}) 
+	postid = test.insert({'userId' : userId, 'url': url, 'limit': limit, 'sType' : sType, 'keyword' : keyword, 'path' : crawlData}) 
 
 	#get data from id
 	queryData = test.find_one({'_id' : postid})
