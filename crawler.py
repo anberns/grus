@@ -31,11 +31,10 @@ import queue
 
 # change path to chrome binary for heroku
 #comment out for local instances
-CHROMEDRIVER_PATH = "/app/.chromedriver/bin/chromedriver"
-chrome_bin = os.environ.get('GOOGLE_CHROME_BIN', "chromedriver")
-options = webdriver.ChromeOptions()
+chrome_bin = os.environ.get('GOOGLE_CHROME_SHIM', None)
+options = ChromeOptions()
 options.binary_location = chrome_bin
-driver = webdriver.Chrome(executable_path = CHROMEDRIVER_PATH, chrome_options = options)
+driver = webdriver.Chrome(executable_path = "chromedriver", chrome_options = options)
 
 #import time
 
