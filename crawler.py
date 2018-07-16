@@ -31,9 +31,9 @@ import queue
 
 # change path to chrome binary for heroku
 #comment out for local instances
-ChromeOptions options = new ChromeOptions()
-options.setBinary("/app/.apt/usr/bin/google-chrome")
-ChromeDriver driver = new ChromeDriver(options)
+options = webdriver.ChromeOptions()
+options.binary_location = "/app/.apt/usr/bin/google-chrome"
+driver = webdriver.Chrome(chrome_options = options)
 
 #import time
 
