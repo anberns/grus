@@ -207,7 +207,7 @@ class DFS(Spider):
 def crawl(url, limit, sType, keyword):
 
 	chrome_bin = os.environ.get('GOOGLE_CHROME_SHIM', None)
-	options = ChromeOptions()
+	options = webdriver.ChromeOptions()
 	options.binary_location = chrome_bin
 	options.add_argument("--headless")
 	options.add_argument("--no-sandbox")
