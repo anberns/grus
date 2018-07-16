@@ -5,7 +5,7 @@ import crawler
 from flask import Flask, request, render_template, make_response 
 from flask_pymongo import PyMongo
 app = Flask(__name__)
-app.config["MONGO_URI"] = "mongodb://heroku_zlgnt8hx:8qj45t037p6on1oj0r472epmhq@ds233551.mlab.com:33551/heroku_zlgnt8hx"
+app.config["MONGO_URI"] = "mongodb://heroku_l49w3pqw:corelnjkhviq52q7gsmalc504c@ds139331.mlab.com:39331/heroku_l49w3pqw"
 mongo = PyMongo(app)
 
 #index page with form
