@@ -29,13 +29,6 @@ import json
 import collections
 import queue
 
-# change path to chrome binary for heroku
-#comment out for local instances
-chrome_bin = os.environ.get('GOOGLE_CHROME_SHIM', None)
-options = ChromeOptions()
-options.binary_location = chrome_bin
-driver = webdriver.Chrome(executable_path = "chromedriver", chrome_options = options)
-
 #import time
 
 #class Logger:
@@ -211,9 +204,14 @@ class DFS(Spider):
 
 #testing functions 
 def crawl(url, limit, sType, keyword):
-	chrome_options = Options()
-	chrome_options.add_argument("--headless")
-	browser = webdriver.Chrome(chrome_options=chrome_options, executable_path="./chromedriver")
+
+	chrome_bin = os.environ.get('GOOGLE_CHROME_SHIM', None)
+	options = ChromeOptions()
+	options.binary_location = chrome_bin
+	options.add_argument("--headless")
+	options.add_argument("--no-sandbox")
+	options.add_argument("--disable-gpu")
+	browser = webdriver.Chrome(chrome_options=options, executable_path="./chromedriver")
 
 	#limit = 2
 	#keyword = None
