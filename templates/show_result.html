@@ -2,9 +2,14 @@
 <html>
 	<body>
 
-		<h2>Database Results</h2>
-		{% if result %}
-			<p>Result: {{result}}</p>
+		<h2>Results</h2>
+		{% if docId %}
+			<h3>Insert</h3>
+				<p>id:  {{docId}}</p>
+		{% endif %}
+		{% if qData %}
+			<h3>Query</h3>
+				<p>data:  {{qData}}</p>
 		{% endif %}
 
 	</body>
