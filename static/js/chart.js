@@ -53,13 +53,29 @@ function parse_data(json_data) {
 
     // Create the set of links for the visualization to use
     visited_sites.forEach(site => {
-        //
+        // Add a link for a site we visited
         if (site.parent) {
             path.push({
                 source: site.parent,
-                target: site.url
+                target: site.url,
+                in_path: true
             });
         }
+
+        // Add links to ones found on pages
+        site.links.forEach(href => {
+            if (visited_sites.findIndex(el => el.url == href) == -1) {
+                visited_sites.push({
+                    url: href,
+                    title: ""
+                });
+            }
+            path.push({
+                source: site.url,
+                target: href,
+                in_path: false
+            });
+        });
     });
 
     update({
@@ -75,26 +91,30 @@ function parse_data(json_data) {
 function update(data) {
 
     // Update links
-    link = link.data(data.links, d => d.source.url + "-" + d.target.url);
+    link = link.data(data.links, d => d.source.url + "-" + d.target.url)
+        .attr("stroke", d => d.in_path ? "#000" : "#666");
 
     // Delete removed links
     link.exit().remove();
 
     // Add any new links
     link = link.enter().append("line")
-        .attr("stroke", d => "#000")
+        .attr("stroke", d => d.in_path ? "#000" : "#666")
         .merge(link);
 
 
     // Update nodes
-    node = node.data(data.nodes, d => d.url);
+    node = node.data(data.nodes, d => d.url)
+        .attr("r", d => d.title ? 5 : 3)
+        .attr("fill", d => d.title ? "#000" : "#666");
 
     // Delete removed sites
     node.exit().remove();
 
     // Add any new sites
     node = node.enter().append("circle")
-        .attr("r", 5)
+        .attr("fill", d => d.title ? "#000" : "#666")
+        .attr("r", d => d.title ? 5 : 3)
         .call(d3.drag()
             .on("start", drag_started)
             .on("drag", dragged)
@@ -106,7 +126,8 @@ function update(data) {
         .text(d => d.url);
 
     // Update titles
-    title = title.data(data.nodes, d => d.url);
+    title = title.data(data.nodes, d => d.url)
+        .text(d => d.title);
 
     // Delete removed sites
     title.exit().remove();
