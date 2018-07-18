@@ -16,5 +16,14 @@ body {
 }
 
 svg {
-    position: absolute
+    position: absolute;
+}
+
+text {
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    text-anchor: middle;
+    font-size: 12px;
+    font-weight: bolder;
+    fill: black;
+    text-shadow: 0px 0px 2px white;
 }

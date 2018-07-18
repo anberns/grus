@@ -23,7 +23,8 @@ var svg = d3.select('#chart')
 var simulation = d3.forceSimulation()
     .force("link", d3.forceLink().id(d => d.url))
     .force("charge", d3.forceManyBody())
-    .force("center", d3.forceCenter(width / 2, height / 2));
+    .force("center", d3.forceCenter(width / 2, height / 2))
+    .on("tick", ticked);
 
 // A selection of all of the visual representations of the links
 var link = svg.append("g")
@@ -34,6 +35,10 @@ var link = svg.append("g")
 var node = svg.append("g")
     .attr("class", "nodes")
     .selectAll("circle");
+
+var title = svg.append("g")
+    .attr("class", "titles")
+    .selectAll("text");
 
 /**
  * Reformat data from the server to fit the format of the visualization
@@ -100,12 +105,28 @@ function update(data) {
     node.append("title")
         .text(d => d.url);
 
-    // Set the nodes and links for the visualization
-    simulation.nodes(data.nodes)
-        .on("tick", ticked);
+    // Update titles
+    title = title.data(data.nodes, d => d.url);
 
-    simulation.force("link")
-        .links(data.links);
+    // Delete removed sites
+    title.exit().remove();
+
+    // Add any new sites
+    title = title.enter().append("text")
+        .text(d => d.title)
+        .call(d3.drag()
+            .on("start", drag_started)
+            .on("drag", dragged)
+            .on("end", drag_ended))
+        .merge(title);
+
+    // Show URL on hover
+    title.append("title")
+        .text(d => d.url);
+
+    // Set the nodes and links for the visualization
+    simulation.nodes(data.nodes);
+    simulation.force("link").links(data.links);
 }
 
 function ticked() {
@@ -116,6 +137,9 @@ function ticked() {
 
     node.attr("cx", d => d.x)
         .attr("cy", d => d.y);
+
+    title.attr("x", d => d.x)
+        .attr("y", d => d.y);
 }
 
 function drag_started(d) {
