@@ -99,37 +99,40 @@ class BFS(Spider):
 		parentinfo = {}
 
 		#starting url
-		parentURL = self.start		
+		currentURL = self.start		
 		depth = 0
+		myParent = "None"
 
 		#while the depth of visited pages is less than the user-set limit
 		while (depth < self.limit + 1):
 
-			if parentURL not in self.visited:
+			if currentURL not in self.visited:
 				#parse that page
-				soup = self.parsePage(parentURL)
+				soup = self.parsePage(currentURL)
 
 				#saves information about that page
 				link_info = {}
-				link_info['url'] = parentURL
+				link_info['url'] = currentURL
 				link_info['title'] = self.findPageTitle(soup)
-				link_info['links'] = self.findConnections(parentURL, soup)
+				link_info['links'] = self.findConnections(currentURL, soup)
 				link_info['depth'] = depth
-				self.visited[parentURL] = link_info
+				link_info['parent'] = myParent
+				self.visited[currentURL] = link_info
 
-			#all children must be put into the queue as parents for next iteration
-			for link in link_info['links']:
-				parentinfo = {}
-				parentinfo['url'] = link
-				parentinfo['depth'] = depth + 1
-				self.parents.put(parentinfo)
+				#all children must be put into the queue as parents for next iteration
+				for link in link_info['links']:
+					parentinfo = {}
+					parentinfo['url'] = link
+					parentinfo['depth'] = depth + 1
+					parentinfo['parent'] = currentURL
+					self.parents.put(parentinfo)
 
 			#gets next parent url and depth from queue
 			parent = self.parents.get()
-			parentURL = parent.get('url')
+			currentURL = parent.get('url')
 			depth = parent.get('depth')	
-			parentURL.rstrip('/')
-
+			myParent = parent.get('parent')
+			currentURL.rstrip('/')
 
 
 class DFS(Spider):
@@ -170,36 +173,36 @@ class DFS(Spider):
 
 	def search(self):
 		#while the number of visited pages is less than the user-set limit
-		url = self.start
+		currentURL = self.start
 		depth = 0
+		myParent = "None"
 
 		while (len(self.visited) < self.limit):
 			#get the first/last url in the list (LIFO or FIFO), depending on search type
-			url.rstrip('/')
+			currentURL.rstrip('/')
 
-			if url not in self.visited:
+			#parse that page
+			soup = self.parsePage(currentURL)
 
-				#parse that page
-				soup = self.parsePage(url)
+			#enter information on page
+			link_info = {}
+			link_info['url'] = currentURL
+			link_info['title'] = self.findPageTitle(soup)
+			link_info['depth'] = depth
+			self.findConnections(currentURL, soup)
+			link_info['links'] = self.URL_list.copy()
+			link_info['parent'] = myParent
 
-				#enter information on page
-				link_info = {}
-				link_info['url'] = url
-				link_info['title'] = self.findPageTitle(soup)
-				link_info['depth'] = depth
-				self.findConnections(url, soup)
-				link_info['links'] = self.URL_list.copy()
+			#copies info into visited lsit
+			self.visited[currentURL] = link_info
 
-				#copies info into visited lsit
-				self.visited[url] = link_info
+			#gets random next link from list of children
+			nextLink = self.nextConnection()
+			myParent = currentURL 
 
-				#gets random next link from list of children
-				nextLink = self.nextConnection()
-
-				#clears the URL_list for next page
-				self.URL_list.clear()
-
-			url = nextLink
+			#clears the URL_list for next page
+			self.URL_list.clear()
+			currentURL = nextLink
 			depth += 1
 
 
@@ -213,26 +216,18 @@ def crawl(url, limit, sType, keyword):
 	options.add_argument("--no-sandbox")
 	options.add_argument("--disable-gpu")
 	browser = webdriver.Chrome(chrome_options=options, executable_path="./chromedriver")
-
-	#limit = 2
-	#keyword = None
-
-	#testing with hardcoded base url with test pages structure
-	#test_url = "http://www.bomanbo.com/"
 	
 	if sType == "dfs":
 		print("DFS on " + url) 
 		crawler = DFS(browser, url, limit, keyword)
 		crawler.search()
-		crawler.printVisited()
-		#crawler.printConnections()
+		#crawler.printVisited()
 	
 	else:
 		print("BFS on " + url)
 		crawler = BFS(browser, url, limit, keyword)
 		crawler.search()
-		crawler.printVisited()
-		#crawler.printConnections()
+		#crawler.printVisited()
 
 	browser.quit()
 	
