@@ -2,12 +2,15 @@ import uuid
 import json
 import sys
 import crawler
+from socket import error as SocketError
+import errno
 from flask import Flask, request, render_template, make_response 
 from flask_pymongo import PyMongo
 from bson.objectid import ObjectId
 app = Flask(__name__)
 app.config["MONGO_URI"] = "mongodb://heroku_zlgnt8hx:8qj45t037p6on1oj0r472epmhq@ds233551.mlab.com:33551/heroku_zlgnt8hx"
 mongo = PyMongo(app)
+sockets = Sockets(app)
 
 #index page with form
 @app.route('/')
@@ -36,7 +39,14 @@ def crawl():
 	keyword = request.form['keyword']
 
 	#webcrawler call goes here
-	crawlData = json.dumps(crawler.crawl(url, int(limit), sType, keyword))
+	while 1:
+		try:
+			crawlData = json.dumps(crawler.crawl(url, int(limit), sType, keyword))
+			break
+		except SocketError as e:
+			if e.errno != errno.ECONNRESET:
+				raise
+			pass
 	
 	#store search in database
 	test = mongo.db.test #access test collection
