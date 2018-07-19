@@ -14,7 +14,6 @@ var svg = d3.select('#chart')
     .append('svg')
     .attr('width', width + margin.left + margin.right)
     .attr('height', height + margin.top + margin.bottom)
-    .style('background-color', 'lightblue')
     .call(responsivefy)
     .append('g')
     .attr('transform', `translate(${margin.left}, ${margin.top})`);
@@ -24,6 +23,7 @@ var simulation = d3.forceSimulation()
     .force("link", d3.forceLink().id(d => d.url))
     .force("charge", d3.forceManyBody())
     .force("center", d3.forceCenter(width / 2, height / 2))
+    .force("collide", d3.forceCollide(d => d.title ? 20 : 0))
     .on("tick", ticked);
 
 // A selection of all of the visual representations of the links
@@ -36,9 +36,12 @@ var node = svg.append("g")
     .attr("class", "nodes")
     .selectAll("circle");
 
+// A selection of all of the visual representations of the site names
 var title = svg.append("g")
     .attr("class", "titles")
     .selectAll("text");
+
+var num_nodes;
 
 /**
  * Reformat data from the server to fit the format of the visualization
@@ -50,6 +53,9 @@ function parse_data(json_data) {
     //     visited_sites = Object.keys(data_obj).map(key => data_obj[key]),
     var visited_sites = Object.keys(json_data).map(key => json_data[key]),
         path = [];
+
+    // Set the number of colored nodes we will have
+    num_nodes = visited_sites.length;
 
     // Create the set of links for the visualization to use
     visited_sites.forEach(site => {
@@ -65,6 +71,7 @@ function parse_data(json_data) {
         // Add links to ones found on pages
         site.links.forEach(href => {
             if (visited_sites.findIndex(el => el.url == href) == -1) {
+                // Add a new site to our list of sites
                 visited_sites.push({
                     url: href,
                     title: ""
@@ -92,28 +99,30 @@ function update(data) {
 
     // Update links
     link = link.data(data.links, d => d.source.url + "-" + d.target.url)
-        .attr("stroke", d => d.in_path ? "#000" : "#666");
+        .attr("stroke-width", d => d.in_path ? 2 : 1)
+        .attr("stroke", d => d.in_path ? "#333" : "#666");
 
     // Delete removed links
     link.exit().remove();
 
     // Add any new links
     link = link.enter().append("line")
-        .attr("stroke", d => d.in_path ? "#000" : "#666")
+        .attr("stroke", d => d.in_path ? "#333" : "#666")
+        .attr("stroke-width", d => d.in_path ? 2 : 1)
         .merge(link);
 
 
     // Update nodes
     node = node.data(data.nodes, d => d.url)
         .attr("r", d => d.title ? 5 : 3)
-        .attr("fill", d => d.title ? "#000" : "#666");
+        .attr("fill", (d, i) => color(d, i));
 
     // Delete removed sites
     node.exit().remove();
 
     // Add any new sites
     node = node.enter().append("circle")
-        .attr("fill", d => d.title ? "#000" : "#666")
+        .attr("fill", (d, i) => color(d, i))
         .attr("r", d => d.title ? 5 : 3)
         .call(d3.drag()
             .on("start", drag_started)
@@ -148,6 +157,17 @@ function update(data) {
     // Set the nodes and links for the visualization
     simulation.nodes(data.nodes);
     simulation.force("link").links(data.links);
+}
+
+function color(d, i) {
+    var h = 0,
+        s = 0,
+        l = 55;
+    if (d.title) {
+        h = (360 / (num_nodes) * i);
+        s = 55;
+    }
+    return "hsl(" + h + ", " + s + "%, " + l + "%)";
 }
 
 function ticked() {
