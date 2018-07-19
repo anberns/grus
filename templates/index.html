@@ -22,7 +22,7 @@
 				<ul class="list-group mb-3">
 					{% if crawls %} {% for crawl in crawls %}
 					<li class="list-group-item d-flex justify-content-between lh-condensed">
-						<div>
+						<div id={{crawl._id}} onclick="submitPrev(this.id);">
 							<h6 class="my-0">{{crawl.url}}</h6>
 							<small class="text-muted">{{ "Breadth" if crawl.type == "bfs" else "Depth" }} First Search - {{crawl.limit}}</small>
 						</div>
@@ -37,6 +37,8 @@
 						</div>
 					</li>
 					{% endif %}
+
+					</form>
 				</ul>
 			</div>
 			<div class="col-md-6 order-md-1">
@@ -114,6 +116,22 @@
 				});
 			}, false);
 		})();
+	</script>
+	<script>
+		function submitPrev(id)
+		{
+			var newForm = document.createElement("form");
+			var newInput = document.createElement("input");
+			newForm.action = "/previous";
+			newForm.method = "POST";
+			newInput.value = id;
+			newInput.name = "prev";
+			newForm.appendChild(newInput);
+
+			document.body.appendChild(newForm);
+
+			newForm.submit();
+		}
 	</script>
 </body>
 
