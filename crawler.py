@@ -29,6 +29,7 @@ import json
 import collections
 import queue
 import os
+import re
 
 #import time
 
@@ -37,7 +38,7 @@ import os
 class Spider(object):
 	def __init__(self, browser, URL, limit, keyword=None):
 		self.browser = browser
-		self.start = URL\
+		self.start = URL
 		self.limit = limit
 		if keyword is not None:
 			self.keyword = keyword
@@ -64,14 +65,6 @@ class Spider(object):
 	def getVisited(self):
 		return self.visited
 
-	def validateURL(self, url):
-		if not validators.url(url): #not valid
-			return False
-		else if url in self.URL_list: #already in the list
-			return False
-		else: 
-			return True
-
 
 
 
@@ -80,7 +73,7 @@ class BFS(Spider):
 	def __init__ (self, browser, URL, limit, keyword=None):
 		self.URL_list = queue.Queue()
 		#inherit Spider constructor
-		super(BFS, self).__init__(browser, URL, limit, keyword=None)
+		super(BFS, self).__init__(browser, URL, limit, keyword)
 
 	def findConnections(self, base, soup):
 		URL_list= []
@@ -95,7 +88,7 @@ class BFS(Spider):
 				url = urljoin(base, url)
 
 			#verifies link found is valid url and not a duplicate
-			if self.validateURL(url):
+			if validators.url(url):
 				URL_list.append(url)
 
 		return URL_list
@@ -111,7 +104,7 @@ class BFS(Spider):
 		keywordFound = False
 
 		#while the depth of visited pages is less than the user-set limit
-		while (depth < self.limit + 1) && !keywordFound:
+		while (depth < self.limit + 1) and not keywordFound:
 
 			if currentURL not in self.visited:
 				#parse that page
@@ -134,22 +127,24 @@ class BFS(Spider):
 					parentinfo['parent'] = currentURL
 					self.URL_list.put(parentinfo)
 
-				if (keyword!=None) && (soup.find_all(string=keyword)):
+			if (self.keyword != None) and soup.find_all(string=re.compile('.*(%s).*'%self.keyword)):
 					keywordFound = True
+					print("FOUND KEYWORD: ", self.keyword)
 
-			#gets next parent url and depth from queue
-			parent = self.URL_list.get()
-			currentURL = parent.get('url')
-			depth = parent.get('depth')	
-			myParent = parent.get('parent')
-			currentURL.rstrip('/')
+			else:
+				#gets next parent url and depth from queue
+				parent = self.URL_list.get()
+				currentURL = parent.get('url')
+				depth = parent.get('depth')	
+				myParent = parent.get('parent')
+				currentURL.rstrip('/')
 
 
 class DFS(Spider):
 
 	def __init__ (self, browser, URL, limit, keyword=None):
 		self.URL_list = []
-		super(DFS, self).__init__(browser, URL, limit, keyword=None)
+		super(DFS, self).__init__(browser, URL, limit, keyword)
 
 	def findConnections(self, base, soup):
 		#find_all looks for all links on the page
@@ -162,11 +157,8 @@ class DFS(Spider):
 				url = urljoin(base, url)
 
 			#verifies link found is valid url
-			if self.validateURL(url):
+			if validators.url(url) and url not in self.URL_list:
 				self.URL_list.append(url)
-
-		#print ("DFS Connections found: ")
-		#print(len(self.URL_list))
 
 
 	def nextConnection(self):		
@@ -187,7 +179,7 @@ class DFS(Spider):
 		myParent = "None"
 		keywordFound = False
 
-		while (len(self.visited) < self.limit+1) && !keywordFound:
+		while (len(self.visited) < self.limit+1) and not keywordFound:
 			#get the first/last url in the list (LIFO or FIFO), depending on search type
 			currentURL.rstrip('/')
 
@@ -207,18 +199,19 @@ class DFS(Spider):
 			self.visited[currentURL] = link_info
 
 			#checks if keyword found to stop the search
-			if (keyword!=None) && (soup.find_all(string=keyword)):
+			if (self.keyword != None) and soup.find_all(string=re.compile('.*(%s).*'%self.keyword)):
 					keywordFound = True
+					print("FOUND KEYWORD: ", self.keyword)
 
 			else: #sets up for next iteration
 			#gets random next link from list of children
-			nextLink = self.nextConnection()
-			myParent = currentURL 
+				nextLink = self.nextConnection()
+				myParent = currentURL 
 
-			#clears the URL_list for next page
-			self.URL_list.clear()
-			currentURL = nextLink
-			depth += 1
+				#clears the URL_list for next page
+				self.URL_list.clear()
+				currentURL = nextLink
+				depth += 1
 
 
 #testing functions 
@@ -232,20 +225,34 @@ def crawl(url, limit, sType, keyword):
 	options.add_argument("--disable-gpu")
 	browser = webdriver.Chrome(chrome_options=options, executable_path="./chromedriver")
 	
+	#LOCAL
+	#chrome_options = Options()
+	#chrome_options.add_argument("--headless")
+	#browser = webdriver.Chrome(chrome_options=chrome_options, executable_path="../crawler/chromedriver")
+
+
 	if sType == "dfs":
 		print("DFS on " + url) 
 		crawler = DFS(browser, url, limit, keyword)
-		crawler.search()
-		#crawler.printVisited()
+		try:
+			crawler.search()
+			crawler.printVisited()
+		except:
+			browser.quit()
 	
 	else:
 		print("BFS on " + url)
 		crawler = BFS(browser, url, limit, keyword)
-		crawler.search()
-		#crawler.printVisited()
+		try:
+			crawler.search()
+			crawler.printVisited()
+		except:
+			print("Error in Crawl")
+		finally:
+			browser.quit()	
 
-	browser.quit()
-	
 	return crawler.getVisited()
 
-#main()
+
+crawl("https://www.google.com", 2, "bfs", "google")
+
