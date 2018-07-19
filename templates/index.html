@@ -23,8 +23,8 @@
 					{% if crawls %} {% for crawl in crawls %}
 					<li class="list-group-item d-flex justify-content-between lh-condensed">
 						<div id={{crawl._id}} onclick="submitPrev(this.id);">
-							<h6 class="my-0">{{crawl.title}}</h6>
-							<small class="text-muted">{{crawl.url}} - {{ "Breadth" if crawl.type == "bfs" else "Depth" }} First Search - {{crawl.limit}}</small>
+							<h6 class="my-0">{{crawl.url}}</h6>
+							<small class="text-muted">{{ "Breadth" if crawl.type == "bfs" else "Depth" }} First Search - {{crawl.limit}}</small>
 						</div>
 						{% if crawl.keyword %}
 						<span class={{ "text-success" if crawl.success else "text-muted" }}>{{crawl.keyword}}</span>
