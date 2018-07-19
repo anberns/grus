@@ -14,19 +14,19 @@ mongo = PyMongo(app)
 # index page with form
 @app.route('/')
 def index():
-    userId = request.cookies.get('userId')
-    userId = None
+	userId = request.cookies.get('userId')
+	userId = None
 
-    if userId:
-        # get stored data
-        test = mongo.db.test  # access test collection
-        storedCrawls = test.find({'userId': userId})
-        return render_template('index.html', crawls=storedCrawls)
-    else:
-        userId = str(uuid.uuid4())
-        resp = make_response(render_template('index.html'))
-        resp.set_cookie('userId', userId)
-        return resp
+	if userId:
+		# get stored data
+		test = mongo.db.test  # access test collection
+		storedCrawls = test.find({'userId': userId})
+		return render_template('index.html', crawls=storedCrawls)
+	else:
+		userId = str(uuid.uuid4())
+		resp = make_response(render_template('index.html'))
+		resp.set_cookie('userId', userId)
+		return resp
 
 
 
@@ -34,14 +34,14 @@ def index():
 @app.route('/submit', methods=['POST'])
 def crawl():
 
-    userId = request.cookies.get('userId')
-    url = "https://" + request.form['url']
-    limit = request.form['limit']
-    sType = request.form['type']
-    keyword = request.form['keyword']
+	userId = request.cookies.get('userId')
+	url = "https://" + request.form['url']
+	limit = request.form['limit']
+	sType = request.form['type']
+	keyword = request.form['keyword']
 
-    #webcrawler call goes here
-    crawlData = json.dumps(crawler.crawl(url, int(limit), sType, keyword))
+	#webcrawler call goes here
+	crawlData = json.dumps(crawler.crawl(url, int(limit), sType, keyword))
 
 	#webcrawler call goes here
 	while 1:
@@ -57,25 +57,25 @@ def crawl():
 	test = mongo.db.test #access test collection
 	postid = test.insert({'userId' : userId, 'url': url, 'limit': limit, 'sType' : sType, 'keyword' : keyword, 'path' : crawlData})
 
-    # get data from id
-    queryData = test.find_one({'_id': postid})
+	# get data from id
+	queryData = test.find_one({'_id': postid})
 	print(queryData)
 
-    return render_template('show_data.html', data=crawlData, url=url, type=sType)
+	return render_template('show_data.html', data=crawlData, url=url, type=sType)
 
 @app.route('/previous', methods=['POST'])
 def getPreviousCrawl():
 
-    #clicked _id from previous crawls list
-    docId = request.form['prev']
+	#clicked _id from previous crawls list
+	docId = request.form['prev']
 
-    test = mongo.db.test #access test collection
+	test = mongo.db.test #access test collection
 
-    #get data from id
-    queryData = test.find_one({'_id' : ObjectId(docId)})
+	#get data from id
+	queryData = test.find_one({'_id' : ObjectId(docId)})
 
-    return render_template('show_data.html',  data=queryData)
+	return render_template('show_data.html',  data=queryData)
 
 
 if __name__ == "__main__":
-    app.run()
+	app.run()
