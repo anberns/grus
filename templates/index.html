@@ -68,7 +68,7 @@
 					<div class="row">
 						<div class="col-md-5 mb-3">
 							<label for="limit">Limit</label>
-							<input type="number" class="form-control" id="limit" name="limit" required>
+							<input type="number" min=1 class="form-control" id="limit" name="limit" required>
 							<div class="invalid-feedback">
 								Search limit required.
 							</div>
@@ -77,12 +77,12 @@
 							<label for="limit">Search Type</label>
 							<div class="d-block">
 								<div class="custom-control custom-radio">
-									<input id="bfs" name="type" value="bfs" type="radio" class="custom-control-input" checked required>
-									<label class="custom-control-label" for="bfs">Breadth First Search</label>
+									<input id="dfs" name="type" value="dfs" type="radio" class="custom-control-input" checked required>
+									<label class="custom-control-label" for="dfs">Depth First Search</label>
 								</div>
 								<div class="custom-control custom-radio">
-									<input id="dfs" name="type" value="dfs" type="radio" class="custom-control-input" required>
-									<label class="custom-control-label" for="dfs">Depth First Search</label>
+									<input id="bfs" name="type" value="bfs" type="radio" class="custom-control-input" required>
+									<label class="custom-control-label" for="bfs">Breadth First Search</label>
 								</div>
 							</div>
 						</div>

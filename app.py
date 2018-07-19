@@ -59,8 +59,9 @@ def crawl():
 
     # get data from id
     queryData = test.find_one({'_id': postid})
+	print(queryData)
 
-    return render_template('show_data.html',  data=queryData)
+    return render_template('show_data.html', data=crawlData, url=url, type=sType)
 
 @app.route('/previous', methods=['POST'])
 def getPreviousCrawl():
