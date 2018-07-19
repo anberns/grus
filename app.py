@@ -4,11 +4,9 @@ import sys
 import crawler
 from flask import Flask, request, render_template, make_response 
 from flask_pymongo import PyMongo
-from socket import error as SocketError
-import errno
-
+from bson.objectid import ObjectId
 app = Flask(__name__)
-app.config["MONGO_URI"] = "mongodb://heroku_l49w3pqw:corelnjkhviq52q7gsmalc504c@ds139331.mlab.com:39331/heroku_l49w3pqw"
+app.config["MONGO_URI"] = "mongodb://heroku_zlgnt8hx:8qj45t037p6on1oj0r472epmhq@ds233551.mlab.com:33551/heroku_zlgnt8hx"
 mongo = PyMongo(app)
 
 #index page with form
@@ -38,17 +36,8 @@ def crawl():
 	keyword = request.form['keyword']
 
 	#webcrawler call goes here
-	while 1:
-		try:
-			crawlData = json.dumps(crawler.crawl(url, int(limit), sType, keyword))
-			break
-		except SocketError as e:
-			if e.errno != errno.ECONNRESET:
-				raise
-				break
-			pass
-			
-
+	crawlData = json.dumps(crawler.crawl(url, int(limit), sType, keyword))
+	
 	#store search in database
 	test = mongo.db.test #access test collection
 	postid = test.insert({'userId' : userId, 'url': url, 'limit': limit, 'sType' : sType, 'keyword' : keyword, 'path' : crawlData}) 
@@ -57,6 +46,19 @@ def crawl():
 	queryData = test.find_one({'_id' : postid})
 
 	return render_template('show_result.html', docId=postid, qData=queryData)
+
+@app.route('/previous', methods=['POST'])
+def getPreviousCrawl():
+
+	#clicked _id from previous crawls list
+	docId = request.form['prev']
+
+	test = mongo.db.test #access test collection
+
+	#get data from id
+	queryData = test.find_one({'_id' : ObjectId(docId)})
+
+	return render_template('show_data.html',  data=queryData)
 
 
 if __name__ == "__main__":
