@@ -2,6 +2,8 @@ import uuid
 import json
 import sys
 import crawler
+from socket import error as SocketError
+import errno
 from flask import Flask, request, render_template, make_response
 from flask_pymongo import PyMongo
 from bson.objectid import ObjectId
@@ -41,9 +43,19 @@ def crawl():
     #webcrawler call goes here
     crawlData = json.dumps(crawler.crawl(url, int(limit), sType, keyword))
 
-    #store search in database
-    test = mongo.db.test #access test collection
-    postid = test.insert({'userId' : userId, 'url': url, 'limit': limit, 'sType' : sType, 'keyword' : keyword, 'path' : crawlData})
+	#webcrawler call goes here
+	while 1:
+		try:
+			crawlData = json.dumps(crawler.crawl(url, int(limit), sType, keyword))
+			break
+		except SocketError as e:
+			if e.errno != errno.ECONNRESET:
+				raise
+			pass
+
+	#store search in database
+	test = mongo.db.test #access test collection
+	postid = test.insert({'userId' : userId, 'url': url, 'limit': limit, 'sType' : sType, 'keyword' : keyword, 'path' : crawlData})
 
     # get data from id
     queryData = test.find_one({'_id': postid})
