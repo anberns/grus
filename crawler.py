@@ -217,7 +217,6 @@ class DFS(Spider):
 #testing functions 
 def crawl(url, limit, sType, keyword):
 
-	'''
 	chrome_bin = os.environ.get('GOOGLE_CHROME_SHIM', None)
 	options = webdriver.ChromeOptions()
 	options.binary_location = chrome_bin
@@ -225,12 +224,14 @@ def crawl(url, limit, sType, keyword):
 	options.add_argument("--no-sandbox")
 	options.add_argument("--disable-gpu")
 	browser = webdriver.Chrome(chrome_options=options, executable_path="./chromedriver")
+	
+
 	'''
 	#LOCAL
 	chrome_options = Options()
 	chrome_options.add_argument("--headless")
 	browser = webdriver.Chrome(chrome_options=chrome_options, executable_path="../crawler/chromedriver")
-
+	'''
 
 	if sType == "dfs":
 		print("DFS on " + url) 
