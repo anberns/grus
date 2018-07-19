@@ -9,8 +9,6 @@ app.config["MONGO_URI"] = "mongodb://heroku_zlgnt8hx:8qj45t037p6on1oj0r472epmhq@
 mongo = PyMongo(app)
 
 # index page with form
-
-
 @app.route('/')
 def index():
     userId = request.cookies.get('userId')
@@ -27,57 +25,9 @@ def index():
         resp.set_cookie('userId', userId)
         return resp
 
-# to be used to call webcrawler with posted data
 
-
-@app.route('/chart', methods=['GET'])
-def chart():
-    data = {
-        'a': {
-            'parent': None,
-            'url': "test.com",
-            'depth': 0,
-            'title': "Test",
-            'links': [
-                "test.com/page1"
-            ]
-        },
-        'b': {
-            'parent': "test.com",
-            'url': "test.com/page1",
-            'depth': 1,
-            'title': "Page 1",
-            'links': [
-                "test.com/page2",
-                "test.com/page3",
-            ]
-        },
-        'c': {
-            'parent': "test.com/page1",
-            'url': "test.com/page2",
-            'depth': 2,
-            'title': "Page 2",
-            'links': [
-                "test.com/page4",
-                "test.com/page5",
-            ]
-        },
-        'd': {
-            'parent': "test.com/page2",
-            'url': "test.com/page4",
-            'depth': 3,
-            'title': "Page 4",
-            'links': [
-                "test.com/page6",
-                "test.com/page7",
-            ]
-        }
-    }
-    return render_template('show_data.html', data=data)
 
 # to be used to call webcrawler with posted data
-
-
 @app.route('/submit', methods=['POST'])
 def crawl():
 
