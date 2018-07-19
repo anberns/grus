@@ -38,30 +38,30 @@ def crawl():
     sType = request.form['type']
     keyword = request.form['keyword']
 
-	#webcrawler call goes here
-	crawlData = json.dumps(crawler.crawl(url, int(limit), sType, keyword))
+    #webcrawler call goes here
+    crawlData = json.dumps(crawler.crawl(url, int(limit), sType, keyword))
 
-	#store search in database
-	test = mongo.db.test #access test collection
-	postid = test.insert({'userId' : userId, 'url': url, 'limit': limit, 'sType' : sType, 'keyword' : keyword, 'path' : crawlData})
+    #store search in database
+    test = mongo.db.test #access test collection
+    postid = test.insert({'userId' : userId, 'url': url, 'limit': limit, 'sType' : sType, 'keyword' : keyword, 'path' : crawlData})
 
     # get data from id
     queryData = test.find_one({'_id': postid})
 
-	return render_template('show_data.html',  data=queryData)
+    return render_template('show_data.html',  data=queryData)
 
 @app.route('/previous', methods=['POST'])
 def getPreviousCrawl():
 
-	#clicked _id from previous crawls list
-	docId = request.form['prev']
+    #clicked _id from previous crawls list
+    docId = request.form['prev']
 
-	test = mongo.db.test #access test collection
+    test = mongo.db.test #access test collection
 
-	#get data from id
-	queryData = test.find_one({'_id' : ObjectId(docId)})
+    #get data from id
+    queryData = test.find_one({'_id' : ObjectId(docId)})
 
-	return render_template('show_data.html',  data=queryData)
+    return render_template('show_data.html',  data=queryData)
 
 
 if __name__ == "__main__":
