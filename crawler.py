@@ -37,9 +37,10 @@ import os
 class Spider(object):
 	def __init__(self, browser, URL, limit, keyword=None):
 		self.browser = browser
-		self.start = URL
-		self.keyword = keyword
+		self.start = URL\
 		self.limit = limit
+		if keyword is not None:
+			self.keyword = keyword
 		self.visited = collections.defaultdict(dict)
 
 	def parsePage(self, URL):
@@ -63,13 +64,21 @@ class Spider(object):
 	def getVisited(self):
 		return self.visited
 
+	def validateURL(self, url):
+		if not validators.url(url): #not valid
+			return False
+		else if url in self.URL_list: #already in the list
+			return False
+		else: 
+			return True
+
 
 
 
 class BFS(Spider):
 
 	def __init__ (self, browser, URL, limit, keyword=None):
-		self.parents = queue.Queue()
+		self.URL_list = queue.Queue()
 		#inherit Spider constructor
 		super(BFS, self).__init__(browser, URL, limit, keyword=None)
 
@@ -86,11 +95,8 @@ class BFS(Spider):
 				url = urljoin(base, url)
 
 			#verifies link found is valid url and not a duplicate
-			if validators.url(url)and url not in URL_list:
+			if self.validateURL(url):
 				URL_list.append(url)
-
-		#print("BFS Connections Found:") 
-		#print(len(URL_list))
 
 		return URL_list
 
@@ -102,9 +108,10 @@ class BFS(Spider):
 		currentURL = self.start		
 		depth = 0
 		myParent = "None"
+		keywordFound = False
 
 		#while the depth of visited pages is less than the user-set limit
-		while (depth < self.limit + 1):
+		while (depth < self.limit + 1) && !keywordFound:
 
 			if currentURL not in self.visited:
 				#parse that page
@@ -119,16 +126,19 @@ class BFS(Spider):
 				link_info['parent'] = myParent
 				self.visited[currentURL] = link_info
 
-				#all children must be put into the queue as parents for next iteration
+				#all children must be put into the queue as URL_list for next iteration
 				for link in link_info['links']:
 					parentinfo = {}
 					parentinfo['url'] = link
 					parentinfo['depth'] = depth + 1
 					parentinfo['parent'] = currentURL
-					self.parents.put(parentinfo)
+					self.URL_list.put(parentinfo)
+
+				if (keyword!=None) && (soup.find_all(string=keyword)):
+					keywordFound = True
 
 			#gets next parent url and depth from queue
-			parent = self.parents.get()
+			parent = self.URL_list.get()
 			currentURL = parent.get('url')
 			depth = parent.get('depth')	
 			myParent = parent.get('parent')
@@ -152,8 +162,7 @@ class DFS(Spider):
 				url = urljoin(base, url)
 
 			#verifies link found is valid url
-			if validators.url(url) and url not in self.URL_list: 
-				url = url.rstrip('/')
+			if self.validateURL(url):
 				self.URL_list.append(url)
 
 		#print ("DFS Connections found: ")
@@ -176,8 +185,9 @@ class DFS(Spider):
 		currentURL = self.start
 		depth = 0
 		myParent = "None"
+		keywordFound = False
 
-		while (len(self.visited) < self.limit):
+		while (len(self.visited) < self.limit+1) && !keywordFound:
 			#get the first/last url in the list (LIFO or FIFO), depending on search type
 			currentURL.rstrip('/')
 
@@ -196,6 +206,11 @@ class DFS(Spider):
 			#copies info into visited lsit
 			self.visited[currentURL] = link_info
 
+			#checks if keyword found to stop the search
+			if (keyword!=None) && (soup.find_all(string=keyword)):
+					keywordFound = True
+
+			else: #sets up for next iteration
 			#gets random next link from list of children
 			nextLink = self.nextConnection()
 			myParent = currentURL 
