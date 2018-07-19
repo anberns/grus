@@ -1,11 +1,41 @@
 <!DOCTYPE html>
 <html>
-	<body>
 
-		<h2>Data</h2>
-		{% if data %}
-			<p>{{data}}</p>
-		{% endif %}
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-	</body>
+	<link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap.min.css') }}">
+	<link rel="stylesheet" href="{{ url_for('static', filename='css/chart.css') }}">
+</head>
+
+<body class="bg-light">
+
+	<div id="main">
+		<div class="py-5 text-center">
+			<h1>Graphical Web Crawler - Grus</h1>
+			<p class="lead">Description of the crawler</p>
+		</div>
+
+		<div id="chart"></div>
+
+		<footer class="pt-5 text-muted text-center text-small">
+			<p class="mb-1">CS467 Capstone - Team Grus</p>
+			<a href="https://github.com/anberns/grus">Source</a>
+		</footer>
+	</div>
+
+
+	<script src="{{ url_for('static', filename='vendor/jquery.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='vendor/d3.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='js/chart.js') }}"></script>
+	<script>
+		var data = {{data|tojson}};
+		parse_data(data);
+	</script>
+</body>
+
+
+</body>
+
 </html>

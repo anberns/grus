@@ -4,8 +4,8 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-	<link rel="stylesheet" href="{{ url_for('static', filename='bootstrap.min.css') }}">
-	<link rel="stylesheet" href="{{ url_for('static', filename='ui.css') }}">
+	<link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap.min.css') }}">
+	<link rel="stylesheet" href="{{ url_for('static', filename='css/ui.css') }}">
 </head>
 
 <body class="bg-light">
@@ -23,8 +23,8 @@
 					{% if crawls %} {% for crawl in crawls %}
 					<li class="list-group-item d-flex justify-content-between lh-condensed">
 						<div id={{crawl._id}} onclick="submitPrev(this.id);">
-							<h6 class="my-0">{{crawl.url}}</h6>
-							<small class="text-muted">{{ "Breadth" if crawl.type == "bfs" else "Depth" }} First Search - {{crawl.limit}}</small>
+							<h6 class="my-0">{{crawl.title}}</h6>
+							<small class="text-muted">{{crawl.url}} - {{ "Breadth" if crawl.type == "bfs" else "Depth" }} First Search - {{crawl.limit}}</small>
 						</div>
 						{% if crawl.keyword %}
 						<span class={{ "text-success" if crawl.success else "text-muted" }}>{{crawl.keyword}}</span>
@@ -99,7 +99,7 @@
 	</div>
 
 
-	<script src="{{ url_for('static', filename='jquery.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='vendor/jquery.min.js') }}"></script>
 	<script>
 		(function() {
 			'use strict';
@@ -118,8 +118,7 @@
 		})();
 	</script>
 	<script>
-		function submitPrev(id)
-		{
+		function submitPrev(id) {
 			var newForm = document.createElement("form");
 			var newInput = document.createElement("input");
 			newForm.action = "/previous";
@@ -133,9 +132,6 @@
 			newForm.submit();
 		}
 	</script>
-</body>
-
-
 </body>
 
 </html>
