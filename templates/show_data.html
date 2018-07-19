@@ -17,11 +17,7 @@
 			<p class="lead">Description of the crawler</p>
 		</div>
 
-		<div id="chart">
-
-
-		</div>
-
+		<div id="chart"></div>
 
 		<footer class="pt-5 text-muted text-center text-small">
 			<p class="mb-1">CS467 Capstone - Team Grus</p>
@@ -33,6 +29,10 @@
 	<script src="{{ url_for('static', filename='vendor/jquery.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='vendor/d3.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='js/chart.js') }}"></script>
+	<script>
+		var data = {{data|tojson}};
+		parse_data(data);
+	</script>
 </body>
 
 
