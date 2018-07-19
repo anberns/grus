@@ -1,6 +1,6 @@
 #pip install BeautifulSoup4
 #pip install validators
-#pip install selenium
+#pipenv install requests
 #pip install lxml
 
 
@@ -20,9 +20,8 @@
 
 
 from urllib.parse import urljoin
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
 from bs4 import BeautifulSoup
+import requests
 from random import randrange
 import validators
 import json
@@ -31,13 +30,19 @@ import queue
 import os
 import re
 
-#import time
-
-#class Logger:
 
 class Spider(object):
-	def __init__(self, browser, URL, limit, keyword=None):
-		self.browser = browser
+	name = "findLinks"
+
+	'''def __init__(self, *args, **kwargs):
+		super(Spider, self).__init__(*args, **kwargs)
+
+		self.start_urls = [kwargs.get('url')]
+		#self.limit = kwargs.get('limit')
+		#self.keyword = kwargs.get('keyword')
+
+	'''
+	def __init__(self, URL, limit, keyword=None):
 		self.start = URL
 		self.limit = limit
 		if keyword is not None:
@@ -46,11 +51,17 @@ class Spider(object):
 
 	def parsePage(self, URL):
 		#fetches web page
-		self.browser.get(URL)
+		response = requests.get(URL, timeout=5)
 
 		#checks status code against code lookup object
-		soup = BeautifulSoup(self.browser.page_source, 'lxml')
-		return soup
+		if (response.status_code == requests.codes.ok):
+			myPage = response.content
+			soup = BeautifulSoup(myPage, 'lxml')
+			return soup
+
+		else:
+			print("Error loading page: ", response.status_code)
+			return None
 
 	def findPageTitle(self, soup):
 		#finds the first title tag
@@ -67,13 +78,12 @@ class Spider(object):
 
 
 
-
 class BFS(Spider):
 
-	def __init__ (self, browser, URL, limit, keyword=None):
+	def __init__ (self, URL, limit, keyword=None):
 		self.URL_list = queue.Queue()
 		#inherit Spider constructor
-		super(BFS, self).__init__(browser, URL, limit, keyword)
+		super(BFS, self).__init__(URL, limit, keyword)
 
 	def findConnections(self, base, soup):
 		URL_list= []
@@ -142,9 +152,9 @@ class BFS(Spider):
 
 class DFS(Spider):
 
-	def __init__ (self, browser, URL, limit, keyword=None):
+	def __init__ (self, URL, limit, keyword=None):
 		self.URL_list = []
-		super(DFS, self).__init__(browser, URL, limit, keyword)
+		super(DFS, self).__init__(URL, limit, keyword)
 
 	def findConnections(self, base, soup):
 		#find_all looks for all links on the page
@@ -217,6 +227,7 @@ class DFS(Spider):
 #testing functions 
 def crawl(url, limit, sType, keyword):
 
+	'''
 	chrome_bin = os.environ.get('GOOGLE_CHROME_SHIM', None)
 	options = webdriver.ChromeOptions()
 	options.binary_location = chrome_bin
@@ -224,37 +235,35 @@ def crawl(url, limit, sType, keyword):
 	options.add_argument("--no-sandbox")
 	options.add_argument("--disable-gpu")
 	browser = webdriver.Chrome(chrome_options=options, executable_path="./chromedriver")
-	
-
 	'''
+
+	'''	
 	#LOCAL
-	chrome_options = Options()
+	chrome_options = Options(Proxy = null)
 	chrome_options.add_argument("--headless")
 	browser = webdriver.Chrome(chrome_options=chrome_options, executable_path="../crawler/chromedriver")
 	'''
 
 	if sType == "dfs":
 		print("DFS on " + url) 
-		crawler = DFS(browser, url, limit, keyword)
+		crawler = DFS(url, limit, keyword)
 		try:
 			crawler.search()
-			#crawler.printVisited()
+			crawler.printVisited()
 		except:
-			browser.quit()
+			print("Error in Crawl")
 	
 	else:
 		print("BFS on " + url)
-		crawler = BFS(browser, url, limit, keyword)
+		crawler = BFS(url, limit, keyword)
 		try:
 			crawler.search()
-			#crawler.printVisited()
+			crawler.printVisited()
 		except:
 			print("Error in Crawl")
-		finally:
-			browser.quit()	
 
 	return crawler.getVisited()
 
 
-#crawl("https://www.google.com", 2, "bfs", "google")
+#crawl("https://www.google.com", 5, "dfs", "ab8ght")
 
