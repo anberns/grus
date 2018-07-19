@@ -7,9 +7,11 @@ var margin = {
 
 var width = 425 - margin.left - margin.right;
 var height = 625 - margin.top - margin.bottom;
+var num_nodes;
+var old_nodes;
 
 
-// /Create the svg where the visualization will reside
+// Create the svg where the visualization will reside
 var svg = d3.select('#chart')
     .append('svg')
     .attr('width', width + margin.left + margin.right)
@@ -23,7 +25,7 @@ var simulation = d3.forceSimulation()
     .force("link", d3.forceLink().id(d => d.url))
     .force("charge", d3.forceManyBody())
     .force("center", d3.forceCenter(width / 2, height / 2))
-    .force("collide", d3.forceCollide(d => d.title ? 20 : 0))
+    .force("collide", d3.forceCollide(d => d.visited ? 20 : 0))
     .on("tick", ticked);
 
 // Create arrows to show directionality
@@ -56,7 +58,6 @@ var title = svg.append("g")
     .attr("class", "titles")
     .selectAll("text");
 
-var num_nodes;
 
 /**
  * Reformat data from the server to fit the format of the visualization
@@ -65,18 +66,22 @@ var num_nodes;
  */
 function parse_data(json_data) {
     // var data_obj = JSON.parse(json_data),
-    //     visited_sites = Object.keys(data_obj).map(key => data_obj[key]),
-    var visited_sites = Object.keys(json_data).map(key => json_data[key]),
-        path = [];
+    //     sites = Object.keys(data_obj).map(key => data_obj[key]),
+    var sites = Object.keys(json_data).map(key => json_data[key]),
+        links = [];
 
-    // Set the number of colored nodes we will have
-    num_nodes = visited_sites.length;
+    // Set the number of colored sites we will have
+    num_nodes = sites.length;
 
     // Create the set of links for the visualization to use
-    visited_sites.forEach(site => {
+    sites.forEach(site => {
+        // Because forEach works with a copy of the original, site can only be
+        // a site we have visited. Mark it as such
+        site.visited = true;
+
         // Add a link for a site we visited
         if (site.parent) {
-            path.push({
+            links.push({
                 source: site.parent,
                 target: site.url,
                 in_path: true
@@ -85,14 +90,11 @@ function parse_data(json_data) {
 
         // Add links to ones found on pages
         site.links.forEach(href => {
-            if (visited_sites.findIndex(el => el.url == href) == -1) {
+            if (sites.findIndex(el => el.url == href) == -1) {
                 // Add a new site to our list of sites
-                visited_sites.push({
-                    url: href,
-                    title: ""
-                });
+                sites.push({ url: href });
             }
-            path.push({
+            links.push({
                 source: site.url,
                 target: href,
                 in_path: false
@@ -100,9 +102,21 @@ function parse_data(json_data) {
         });
     });
 
+    // Get the current nodes in the visualization to preserve positions
+    var old_nodes = d3.selectAll('circle').data();
+    sites.forEach(site => {
+        var old_site = old_nodes.find(el => el.url == site.url);
+        if (old_site) {
+            site.x = old_site.x;
+            site.y = old_site.y;
+            site.vx = old_site.vx;
+            site.vy = old_site.vy;
+        }
+    });
+
     update({
-        nodes: visited_sites,
-        links: path
+        nodes: sites,
+        links: links
     });
 }
 /**
@@ -131,16 +145,16 @@ function update(data) {
 
     // Update nodes
     node = node.data(data.nodes, d => d.url)
-        .attr("r", d => d.title ? 5 : 3)
-        .attr("fill", (d, i) => color(d, i));
+        .attr("r", d => d.visited ? 5 : 3)
+        .attr("fill", (d, i) => color(d.visited, i));
 
     // Delete removed sites
     node.exit().remove();
 
     // Add any new sites
     node = node.enter().append("circle")
-        .attr("fill", (d, i) => color(d, i))
-        .attr("r", d => d.title ? 5 : 3)
+        .attr("fill", (d, i) => color(d.visited, i))
+        .attr("r", d => d.visited ? 5 : 3)
         .call(d3.drag()
             .on("start", drag_started)
             .on("drag", dragged)
@@ -153,14 +167,14 @@ function update(data) {
 
     // Update titles
     title = title.data(data.nodes, d => d.url)
-        .text(d => d.title);
+        .text(d => d.title || "");
 
     // Delete removed sites
     title.exit().remove();
 
     // Add any new sites
     title = title.enter().append("text")
-        .text(d => d.title)
+        .text(d => d.title || "")
         .call(d3.drag()
             .on("start", drag_started)
             .on("drag", dragged)
@@ -176,11 +190,11 @@ function update(data) {
     simulation.force("link").links(data.links);
 }
 
-function color(d, i) {
+function color(was_visited, i) {
     var h = 0,
         s = 0,
         l = 55;
-    if (d.title) {
+    if (was_visited) {
         h = (360 / (num_nodes) * i);
         s = 55;
     }
