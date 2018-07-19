@@ -4,6 +4,9 @@ import sys
 import crawler
 from flask import Flask, request, render_template, make_response 
 from flask_pymongo import PyMongo
+from socket import error as SocketError
+import errno
+
 app = Flask(__name__)
 app.config["MONGO_URI"] = "mongodb://heroku_l49w3pqw:corelnjkhviq52q7gsmalc504c@ds139331.mlab.com:39331/heroku_l49w3pqw"
 mongo = PyMongo(app)
@@ -35,12 +38,16 @@ def crawl():
 	keyword = request.form['keyword']
 
 	#webcrawler call goes here
-	crawlData = json.dumps(crawler.crawl(url, int(limit), sType, keyword))
-
-	#crawlData = {"path" : {"start" : request.form['url'], "1" : "www.test1.com", "2" : "www.test2.com", "3" : "www.test3.com", "4" : "www.test4.com"}, "found" : 'false' }
-
-	#temporary template to show posted data
-	#return render_template('show_data.html', data=crawlData)
+	while 1:
+		try:
+			crawlData = json.dumps(crawler.crawl(url, int(limit), sType, keyword))
+			break
+		except SocketError as e:
+			if e.errno != errno.ECONNRESET:
+				raise
+				break
+			pass
+			
 
 	#store search in database
 	test = mongo.db.test #access test collection
