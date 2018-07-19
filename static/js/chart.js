@@ -26,6 +26,21 @@ var simulation = d3.forceSimulation()
     .force("collide", d3.forceCollide(d => d.title ? 20 : 0))
     .on("tick", ticked);
 
+// Create arrows to show directionality
+svg.append("svg:defs").selectAll("marker")
+    .data(["in_path", "out_of_path"])
+    .enter().append("svg:marker")
+    .attr("id", String)
+    .attr("viewBox", "0 -5 10 10")
+    .attr("refX", 15)
+    .attr("refY", 0)
+    .attr("markerWidth", d => d == "in_path" ? 4 : 0)
+    .attr("markerHeight", d => d == "in_path" ? 4 : 0)
+    .attr('fill', "#333")
+    .attr("orient", "auto")
+    .append("svg:path")
+    .attr("d", "M0,-5L10,0L0,5");
+
 // A selection of all of the visual representations of the links
 var link = svg.append("g")
     .attr("class", "links")
@@ -100,7 +115,8 @@ function update(data) {
     // Update links
     link = link.data(data.links, d => d.source.url + "-" + d.target.url)
         .attr("stroke-width", d => d.in_path ? 2 : 1)
-        .attr("stroke", d => d.in_path ? "#333" : "#666");
+        .attr("stroke", d => d.in_path ? "#333" : "#666")
+        .attr('marker-end', d => d.in_path ? 'url(#in_path)' : 'url(#out_of_path)');
 
     // Delete removed links
     link.exit().remove();
@@ -109,6 +125,7 @@ function update(data) {
     link = link.enter().append("line")
         .attr("stroke", d => d.in_path ? "#333" : "#666")
         .attr("stroke-width", d => d.in_path ? 2 : 1)
+        .attr('marker-end', d => d.in_path ? 'url(#in_path)' : 'url(#out_of_path)')
         .merge(link);
 
 
