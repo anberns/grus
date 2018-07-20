@@ -1,6 +1,6 @@
 #pip install BeautifulSoup4
 #pip install validators
-#pip install selenium
+#pipenv install requests
 #pip install lxml
 
 
@@ -20,35 +20,48 @@
 
 
 from urllib.parse import urljoin
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
 from bs4 import BeautifulSoup
+import requests
 from random import randrange
 import validators
 import json
 import collections
 import queue
 import os
+import re
 
-#import time
-
-#class Logger:
 
 class Spider(object):
-	def __init__(self, browser, URL, limit, keyword=None):
-		self.browser = browser
+	name = "findLinks"
+
+	'''def __init__(self, *args, **kwargs):
+		super(Spider, self).__init__(*args, **kwargs)
+
+		self.start_urls = [kwargs.get('url')]
+		#self.limit = kwargs.get('limit')
+		#self.keyword = kwargs.get('keyword')
+
+	'''
+	def __init__(self, URL, limit, keyword=None):
 		self.start = URL
-		self.keyword = keyword
 		self.limit = limit
+		if keyword is not None:
+			self.keyword = keyword
 		self.visited = collections.defaultdict(dict)
 
 	def parsePage(self, URL):
 		#fetches web page
-		self.browser.get(URL)
+		response = requests.get(URL, timeout=5)
 
 		#checks status code against code lookup object
-		soup = BeautifulSoup(self.browser.page_source, 'lxml')
-		return soup
+		if (response.status_code == requests.codes.ok):
+			myPage = response.content
+			soup = BeautifulSoup(myPage, 'lxml')
+			return soup
+
+		else:
+			print("Error loading page: ", response.status_code)
+			return None
 
 	def findPageTitle(self, soup):
 		#finds the first title tag
@@ -65,13 +78,12 @@ class Spider(object):
 
 
 
-
 class BFS(Spider):
 
-	def __init__ (self, browser, URL, limit, keyword=None):
-		self.parents = queue.Queue()
+	def __init__ (self, URL, limit, keyword=None):
+		self.URL_list = queue.Queue()
 		#inherit Spider constructor
-		super(BFS, self).__init__(browser, URL, limit, keyword=None)
+		super(BFS, self).__init__(URL, limit, keyword)
 
 	def findConnections(self, base, soup):
 		URL_list= []
@@ -86,11 +98,8 @@ class BFS(Spider):
 				url = urljoin(base, url)
 
 			#verifies link found is valid url and not a duplicate
-			if validators.url(url)and url not in URL_list:
+			if validators.url(url):
 				URL_list.append(url)
-
-		#print("BFS Connections Found:") 
-		#print(len(URL_list))
 
 		return URL_list
 
@@ -99,44 +108,53 @@ class BFS(Spider):
 		parentinfo = {}
 
 		#starting url
-		parentURL = self.start		
+		currentURL = self.start		
 		depth = 0
+		myParent = "None"
+		keywordFound = False
 
 		#while the depth of visited pages is less than the user-set limit
-		while (depth < self.limit + 1):
+		while (depth < self.limit + 1) and not keywordFound:
 
-			if parentURL not in self.visited:
+			if currentURL not in self.visited:
 				#parse that page
-				soup = self.parsePage(parentURL)
+				soup = self.parsePage(currentURL)
 
 				#saves information about that page
 				link_info = {}
-				link_info['url'] = parentURL
+				link_info['url'] = currentURL
 				link_info['title'] = self.findPageTitle(soup)
-				link_info['links'] = self.findConnections(parentURL, soup)
+				link_info['links'] = self.findConnections(currentURL, soup)
 				link_info['depth'] = depth
-				self.visited[parentURL] = link_info
+				link_info['parent'] = myParent
+				self.visited[currentURL] = link_info
 
-			#all children must be put into the queue as parents for next iteration
-			for link in link_info['links']:
-				parentinfo = {}
-				parentinfo['url'] = link
-				parentinfo['depth'] = depth + 1
-				self.parents.put(parentinfo)
+				#all children must be put into the queue as URL_list for next iteration
+				for link in link_info['links']:
+					parentinfo = {}
+					parentinfo['url'] = link
+					parentinfo['depth'] = depth + 1
+					parentinfo['parent'] = currentURL
+					self.URL_list.put(parentinfo)
 
-			#gets next parent url and depth from queue
-			parent = self.parents.get()
-			parentURL = parent.get('url')
-			depth = parent.get('depth')	
-			parentURL.rstrip('/')
+			if (self.keyword != None) and soup.find_all(string=re.compile('.*(%s).*'%self.keyword)):
+					keywordFound = True
+					print("FOUND KEYWORD: ", self.keyword)
 
+			else:
+				#gets next parent url and depth from queue
+				parent = self.URL_list.get()
+				currentURL = parent.get('url')
+				depth = parent.get('depth')	
+				myParent = parent.get('parent')
+				currentURL.rstrip('/')
 
 
 class DFS(Spider):
 
-	def __init__ (self, browser, URL, limit, keyword=None):
+	def __init__ (self, URL, limit, keyword=None):
 		self.URL_list = []
-		super(DFS, self).__init__(browser, URL, limit, keyword=None)
+		super(DFS, self).__init__(URL, limit, keyword)
 
 	def findConnections(self, base, soup):
 		#find_all looks for all links on the page
@@ -149,12 +167,8 @@ class DFS(Spider):
 				url = urljoin(base, url)
 
 			#verifies link found is valid url
-			if validators.url(url) and url not in self.URL_list: 
-				url = url.rstrip('/')
+			if validators.url(url) and url not in self.URL_list:
 				self.URL_list.append(url)
-
-		#print ("DFS Connections found: ")
-		#print(len(self.URL_list))
 
 
 	def nextConnection(self):		
@@ -170,42 +184,50 @@ class DFS(Spider):
 
 	def search(self):
 		#while the number of visited pages is less than the user-set limit
-		url = self.start
+		currentURL = self.start
 		depth = 0
+		myParent = "None"
+		keywordFound = False
 
-		while (len(self.visited) < self.limit):
+		while (len(self.visited) < self.limit+1) and not keywordFound:
 			#get the first/last url in the list (LIFO or FIFO), depending on search type
-			url.rstrip('/')
+			currentURL.rstrip('/')
 
-			if url not in self.visited:
+			#parse that page
+			soup = self.parsePage(currentURL)
 
-				#parse that page
-				soup = self.parsePage(url)
+			#enter information on page
+			link_info = {}
+			link_info['url'] = currentURL
+			link_info['title'] = self.findPageTitle(soup)
+			link_info['depth'] = depth
+			self.findConnections(currentURL, soup)
+			link_info['links'] = self.URL_list.copy()
+			link_info['parent'] = myParent
 
-				#enter information on page
-				link_info = {}
-				link_info['url'] = url
-				link_info['title'] = self.findPageTitle(soup)
-				link_info['depth'] = depth
-				self.findConnections(url, soup)
-				link_info['links'] = self.URL_list.copy()
+			#copies info into visited lsit
+			self.visited[currentURL] = link_info
 
-				#copies info into visited lsit
-				self.visited[url] = link_info
+			#checks if keyword found to stop the search
+			if (self.keyword != None) and soup.find_all(string=re.compile('.*(%s).*'%self.keyword)):
+					keywordFound = True
+					print("FOUND KEYWORD: ", self.keyword)
 
-				#gets random next link from list of children
+			else: #sets up for next iteration
+			#gets random next link from list of children
 				nextLink = self.nextConnection()
+				myParent = currentURL 
 
 				#clears the URL_list for next page
 				self.URL_list.clear()
-
-			url = nextLink
-			depth += 1
+				currentURL = nextLink
+				depth += 1
 
 
 #testing functions 
 def crawl(url, limit, sType, keyword):
 
+	'''
 	chrome_bin = os.environ.get('GOOGLE_CHROME_SHIM', None)
 	options = webdriver.ChromeOptions()
 	options.binary_location = chrome_bin
@@ -213,29 +235,35 @@ def crawl(url, limit, sType, keyword):
 	options.add_argument("--no-sandbox")
 	options.add_argument("--disable-gpu")
 	browser = webdriver.Chrome(chrome_options=options, executable_path="./chromedriver")
+	'''
 
-	#limit = 2
-	#keyword = None
+	'''	
+	#LOCAL
+	chrome_options = Options(Proxy = null)
+	chrome_options.add_argument("--headless")
+	browser = webdriver.Chrome(chrome_options=chrome_options, executable_path="../crawler/chromedriver")
+	'''
 
-	#testing with hardcoded base url with test pages structure
-	#test_url = "http://www.bomanbo.com/"
-	
 	if sType == "dfs":
 		print("DFS on " + url) 
-		crawler = DFS(browser, url, limit, keyword)
-		crawler.search()
-		crawler.printVisited()
-		#crawler.printConnections()
+		crawler = DFS(url, limit, keyword)
+		try:
+			crawler.search()
+			crawler.printVisited()
+		except:
+			print("Error in Crawl")
 	
 	else:
 		print("BFS on " + url)
-		crawler = BFS(browser, url, limit, keyword)
-		crawler.search()
-		crawler.printVisited()
-		#crawler.printConnections()
+		crawler = BFS(url, limit, keyword)
+		try:
+			crawler.search()
+			crawler.printVisited()
+		except:
+			print("Error in Crawl")
 
-	browser.quit()
-	
 	return crawler.getVisited()
 
-#main()
+
+#crawl("https://www.google.com", 5, "dfs", "ab8ght")
+
