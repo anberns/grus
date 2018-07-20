@@ -45,8 +45,10 @@ class Spider(object):
 	def __init__(self, URL, limit, keyword=None):
 		self.start = URL
 		self.limit = limit
-		if keyword is not None:
+		if keyword:
 			self.keyword = keyword
+		else:
+			self.keyword = None
 		self.visited = collections.defaultdict(dict)
 
 	def parsePage(self, URL):
