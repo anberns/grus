@@ -110,7 +110,7 @@ class BFS(Spider):
 		#starting url
 		currentURL = self.start		
 		depth = 0
-		myParent = "None"
+		myParent = None
 		keywordFound = False
 
 		#while the depth of visited pages is less than the user-set limit
@@ -186,7 +186,7 @@ class DFS(Spider):
 		#while the number of visited pages is less than the user-set limit
 		currentURL = self.start
 		depth = 0
-		myParent = "None"
+		myParent = None
 		keywordFound = False
 
 		while (len(self.visited) < self.limit+1) and not keywordFound:

@@ -62,6 +62,7 @@ def getPreviousCrawl():
 
 	#get data from id
 	queryData = test.find_one({'_id' : ObjectId(docId)})
+	print(queryData['path'])
 
 	return render_template('show_data.html', data=queryData['path'], url=queryData['url'], type=queryData['sType'])
 
