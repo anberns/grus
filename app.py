@@ -7,6 +7,7 @@ import errno
 from flask import Flask, request, render_template, make_response
 from flask_pymongo import PyMongo
 from bson.objectid import ObjectId
+import requests
 app = Flask(__name__)
 app.config["MONGO_URI"] = "mongodb://heroku_zlgnt8hx:8qj45t037p6on1oj0r472epmhq@ds233551.mlab.com:33551/heroku_zlgnt8hx"
 mongo = PyMongo(app)
@@ -34,10 +35,21 @@ def index():
 def crawl():
 
 	userId = request.cookies.get('userId')
-	url = "https://" + request.form['url']
+	url = request.form['url'] if request.form['url'][:8] is "https://" else "https://" + request.form['url']
 	limit = request.form['limit']
 	sType = request.form['type']
 	keyword = request.form['keyword']
+
+	#check valid url
+	try:
+		r = requests.get(url)
+		if r.status_code >= 200 and r.status_code < 300:
+			return 'Web site exists'
+		else:
+			return r.status_code
+	except requests.exceptions.RequestException:
+		return 'Bad site'
+
 
 	#webcrawler call goes here
 	crawlData = json.dumps(crawler.crawl(url, int(limit), sType, keyword))
