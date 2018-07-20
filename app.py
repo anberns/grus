@@ -43,16 +43,6 @@ def crawl():
 	#webcrawler call goes here
 	crawlData = json.dumps(crawler.crawl(url, int(limit), sType, keyword))
 
-	#webcrawler call goes here
-	while 1:
-		try:
-			crawlData = json.dumps(crawler.crawl(url, int(limit), sType, keyword))
-			break
-		except SocketError as e:
-			if e.errno != errno.ECONNRESET:
-				raise
-			pass
-
 	#store search in database
 	test = mongo.db.test #access test collection
 	postid = test.insert({'userId' : userId, 'url': url, 'limit': limit, 'sType' : sType, 'keyword' : keyword, 'path' : crawlData})
