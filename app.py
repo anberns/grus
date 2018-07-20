@@ -43,12 +43,28 @@ def crawl():
 	#check valid url
 	try:
 		r = requests.get(url)
-		if r.status_code >= 200 and r.status_code < 300:
-			return 'Web site exists'
+		if r.status_code < 200 or r.status_code >= 300:
+			if userId:
+				# get stored data
+				test = mongo.db.test  # access test collection
+				storedCrawls = test.find({'userId': userId})
+				return render_template('index.html', crawls=storedCrawls, err=url + " responded with " + str(r.status_code))
+			else:
+				userId = str(uuid.uuid4())
+				resp = make_response(render_template('index.html', err=url + " responded with " + str(r.status_code)))
+				resp.set_cookie('userId', userId)
+				return resp
+	except requests.exceptions.RequestException as e:
+		if userId:
+			# get stored data
+			test = mongo.db.test  # access test collection
+			storedCrawls = test.find({'userId': userId})
+			return render_template('index.html', crawls=storedCrawls, err=e)
 		else:
-			return r.status_code
-	except requests.exceptions.RequestException:
-		return 'Bad site'
+			userId = str(uuid.uuid4())
+			resp = make_response(render_template('index.html', err=e))
+			resp.set_cookie('userId', userId)
+			return resp
 
 
 	#webcrawler call goes here

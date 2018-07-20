@@ -9,8 +9,15 @@
 </head>
 
 <body class="bg-light">
-
 	<div class="container">
+		{% if err %}
+		<div class="alert alert-danger alert-dismissible fade show" role="alert">
+			<strong>Error:</strong> {{err}}
+			<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+				<span aria-hidden="true">&times;</span>
+			</button>
+		</div>
+		{% endif %}
 		<div class="py-5 text-center">
 			<h1>Graphical Web Crawler - Grus</h1>
 			<p class="lead">Description of the crawler</p>
