@@ -15,7 +15,6 @@ mongo = PyMongo(app)
 @app.route('/')
 def index():
 	userId = request.cookies.get('userId')
-	userId = None
 
 	if userId:
 		# get stored data
