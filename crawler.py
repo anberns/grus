@@ -119,13 +119,16 @@ class BFS(Spider):
 		keywordFound = False
 
 		#while the depth of visited pages is less than the user-set limit
-		while (depth < self.limit + 1) and not keywordFound and not self.URL_list.empty():
+		while (depth < self.limit) and not keywordFound and not self.URL_list.empty():
 
 			parent = self.URL_list.get()
 			currentURL = parent.get('url')
 			depth = parent.get('depth')	
 			myParent = parent.get('parent')
 			currentURL.rstrip('/')
+
+			if depth >= self.limit:
+				break
 
 			if currentURL not in self.visited:
 				#parse that page
