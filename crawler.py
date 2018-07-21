@@ -30,6 +30,7 @@ import queue
 import os
 import re
 import sys
+from flask_sockets import Sockets
 
 class Spider(object):
 	name = "findLinks"
@@ -105,7 +106,7 @@ class BFS(Spider):
 
 		return URL_list
 
-	def search(self):
+	def search(self, ws):
 		#holds url and depth for each parent in queue before being processed
 		parentinfo = {
 			'url': self.start,
@@ -141,6 +142,10 @@ class BFS(Spider):
 				link_info['links'] = self.findConnections(currentURL, soup)
 				link_info['depth'] = depth
 				link_info['parent'] = myParent
+
+				#send info to visualizer
+				ws.send(json.dumps(link_info))
+
 				self.visited[currentURL] = link_info
 
 				#all children must be put into the queue as URL_list for next iteration
@@ -190,7 +195,7 @@ class DFS(Spider):
 		return self.URL_list[random]
 
 
-	def search(self):
+	def search(self, ws):
 		#while the number of visited pages is less than the user-set limit
 		currentURL = self.start
 		depth = 0
@@ -213,6 +218,9 @@ class DFS(Spider):
 			link_info['links'] = self.URL_list.copy()
 			link_info['parent'] = myParent
 
+			#send link_info to visualizer
+			ws.send(json.dumps(link_info))
+
 			#copies info into visited lsit
 			self.visited[currentURL] = link_info
 
@@ -233,7 +241,7 @@ class DFS(Spider):
 
 
 #testing functions 
-def crawl(url, limit, sType, keyword):
+def crawl(ws, url, limit, sType, keyword):
 
 	'''
 	chrome_bin = os.environ.get('GOOGLE_CHROME_SHIM', None)
@@ -256,7 +264,7 @@ def crawl(url, limit, sType, keyword):
 		print("DFS on " + url) 
 		crawler = DFS(url, limit, keyword)
 		try:
-			crawler.search()
+			crawler.search(ws) #now passed websocket
 			crawler.printVisited()
 		except:
 			print(sys.exc_info()[0])
@@ -265,7 +273,7 @@ def crawl(url, limit, sType, keyword):
 		print("BFS on " + url)
 		crawler = BFS(url, limit, keyword)
 		try:
-			crawler.search()
+			crawler.search(ws) #now passed websocket
 			crawler.printVisited()
 		except:
 			print(sys.exc_info()[0])
