@@ -29,7 +29,7 @@ import collections
 import queue
 import os
 import re
-
+import sys
 
 class Spider(object):
 	name = "findLinks"
@@ -259,7 +259,7 @@ def crawl(url, limit, sType, keyword):
 			crawler.search()
 			crawler.printVisited()
 		except:
-			print("Error in Crawl")
+			print(sys.exc_info()[0])
 	
 	else:
 		print("BFS on " + url)
@@ -268,7 +268,7 @@ def crawl(url, limit, sType, keyword):
 			crawler.search()
 			crawler.printVisited()
 		except:
-			print("Error in Crawl")
+			print(sys.exc_info()[0])
 
 	return crawler.getVisited()
 
