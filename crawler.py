@@ -107,16 +107,25 @@ class BFS(Spider):
 
 	def search(self):
 		#holds url and depth for each parent in queue before being processed
-		parentinfo = {}
+		parentinfo = {
+			'url': self.start,
+			'depth':  0,
+			'parent': None
+		}
+		depth = 0
+		self.URL_list.put(parentinfo)
 
 		#starting url
-		currentURL = self.start		
-		depth = 0
-		myParent = None
 		keywordFound = False
 
 		#while the depth of visited pages is less than the user-set limit
-		while (depth < self.limit + 1) and not keywordFound:
+		while (depth < self.limit + 1) and not keywordFound and not self.URL_list.empty():
+
+			parent = self.URL_list.get()
+			currentURL = parent.get('url')
+			depth = parent.get('depth')	
+			myParent = parent.get('parent')
+			currentURL.rstrip('/')
 
 			if currentURL not in self.visited:
 				#parse that page
@@ -143,13 +152,7 @@ class BFS(Spider):
 					keywordFound = True
 					print("FOUND KEYWORD: ", self.keyword)
 
-			else:
-				#gets next parent url and depth from queue
-				parent = self.URL_list.get()
-				currentURL = parent.get('url')
-				depth = parent.get('depth')	
-				myParent = parent.get('parent')
-				currentURL.rstrip('/')
+			
 
 
 class DFS(Spider):

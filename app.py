@@ -50,7 +50,7 @@ def crawl():
 	queryData = test.find_one({'_id': postid})
 	print(queryData)
 
-	return render_template('show_data.html', data=queryData['path'], url=queryData['url'], type=queryData['sType'])
+	return render_template('show_data.html', data=queryData['path'], url=queryData['url'], type=queryData['sType'], keyword=queryData['keyword'])
 
 @app.route('/previous', methods=['POST'])
 def getPreviousCrawl():
@@ -64,7 +64,7 @@ def getPreviousCrawl():
 	queryData = test.find_one({'_id' : ObjectId(docId)})
 	print(queryData['path'])
 
-	return render_template('show_data.html', data=queryData['path'], url=queryData['url'], type=queryData['sType'])
+	return render_template('show_data.html', data=queryData['path'], url=queryData['url'], type=queryData['sType'], keyword=queryData['keyword'])
 
 
 if __name__ == "__main__":
