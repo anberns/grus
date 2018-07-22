@@ -88,22 +88,25 @@ class BFS(Spider):
 		super(BFS, self).__init__(URL, limit, keyword)
 
 	def findConnections(self, base, soup):
-		URL_list= []
+		connections= []
 		#find_all looks for all links on the page
 		for link in soup.find_all('a', href=True):
 			url = link['href']
-			url = url.rstrip('/')
 
 			#handles relative URLs - by looking for links lacking http and 
 			#joining these to the base URL to form an absolute URL
-			if not url.startswith('http'):
+			if not url.startswith('http') and not url.startswith('#'):
 				url = urljoin(base, url)
 
-			#verifies link found is valid url and not a duplicate
-			if validators.url(url):
-				URL_list.append(url)
+			#removes query params so as not to have repeated websites
+			removeQuery = url.split('?')
+			url = removeQuery[0]
 
-		return URL_list
+			#verifies link found is valid url and not a duplicate
+			if validators.url(url) and url not in connections:
+				connections.append(url)
+
+		return connections
 
 	def search(self):
 		#holds url and depth for each parent in queue before being processed
@@ -134,30 +137,29 @@ class BFS(Spider):
 				#parse that page
 				soup = self.parsePage(currentURL)
 
-				#saves information about that page
-				link_info = {}
-				link_info['url'] = currentURL
-				link_info['title'] = self.findPageTitle(soup)
-				link_info['links'] = self.findConnections(currentURL, soup)
-				link_info['depth'] = depth
-				link_info['parent'] = myParent
-				self.visited[currentURL] = link_info
+				if soup is not None:
+					#saves information about that page
+					link_info = {}
+					link_info['url'] = currentURL
+					link_info['title'] = self.findPageTitle(soup)
+					link_info['links'] = self.findConnections(currentURL, soup)
+					link_info['depth'] = depth
+					link_info['parent'] = myParent
+					self.visited[currentURL] = link_info
 
-				#all children must be put into the queue as URL_list for next iteration
-				for link in link_info['links']:
-					parentinfo = {}
-					parentinfo['url'] = link
-					parentinfo['depth'] = depth + 1
-					parentinfo['parent'] = currentURL
-					self.URL_list.put(parentinfo)
+					#all children must be put into the queue as URL_list for next iteration
+					for link in link_info['links']:
+						parentinfo = {}
+						parentinfo['url'] = link
+						parentinfo['depth'] = depth + 1
+						parentinfo['parent'] = currentURL
+						self.URL_list.put(parentinfo)
 
-			if (self.keyword != None) and soup.find_all(string=re.compile('.*(%s).*'%self.keyword)):
-					keywordFound = True
-					print("FOUND KEYWORD: ", self.keyword)
+				if (self.keyword != None) and soup.find_all(string=re.compile(r'\b%s\b' % self.keyword, re.IGNORECASE)):
+						keywordFound = True
+						print("FOUND KEYWORD: ", self.keyword)
 
 			
-
-
 class DFS(Spider):
 
 	def __init__ (self, URL, limit, keyword=None):
@@ -171,23 +173,24 @@ class DFS(Spider):
 
 			#handles relative URLs - by looking for links lacking http and 
 			#joining these to the base URL to form an absolute URL
-			if not url.startswith('http'):
+			if not url.startswith('http') and not url.startswith('#'):
 				url = urljoin(base, url)
 
-			#verifies link found is valid url
-			if validators.url(url) and url not in self.URL_list:
+			#removes query params so as not to have repeated websites
+			removeQuery = url.split('?')
+			url = removeQuery[0]
+
+			#verifies link found is valid url and not a duplicate
+			if validators.url(url) and url not in self.URL_list and url not in self.visited:
 				self.URL_list.append(url)
 
-
-	def nextConnection(self):		
-		random = randrange(0, len(self.URL_list))
-
-		#looks at random url chosen to see if already visited
-		while (self.URL_list[random] in self.visited):
-			random = randrange(0, len(self.URL_list))
-
-		#returns random url from page to follow
-		return self.URL_list[random]
+	def nextConnection(self):
+		if self.URL_list:		
+			random = randrange(0, len(self.URL_list)-1)
+			#returns random url from page to follow
+			return self.URL_list[random]
+		else:
+			return None
 
 
 	def search(self):
@@ -196,40 +199,45 @@ class DFS(Spider):
 		depth = 0
 		myParent = None
 		keywordFound = False
+		nextLink = " "
 
-		while (len(self.visited) < self.limit+1) and not keywordFound:
+		while (len(self.visited) < self.limit+1) and not keywordFound and nextLink != None:
 			#get the first/last url in the list (LIFO or FIFO), depending on search type
 			currentURL.rstrip('/')
 
 			#parse that page
 			soup = self.parsePage(currentURL)
 
-			#enter information on page
-			link_info = {}
-			link_info['url'] = currentURL
-			link_info['title'] = self.findPageTitle(soup)
-			link_info['depth'] = depth
-			self.findConnections(currentURL, soup)
-			link_info['links'] = self.URL_list.copy()
-			link_info['parent'] = myParent
-
-			#copies info into visited lsit
-			self.visited[currentURL] = link_info
-
-			#checks if keyword found to stop the search
-			if (self.keyword != None) and soup.find_all(string=re.compile('.*(%s).*'%self.keyword)):
-					keywordFound = True
-					print("FOUND KEYWORD: ", self.keyword)
-
-			else: #sets up for next iteration
-			#gets random next link from list of children
-				nextLink = self.nextConnection()
-				myParent = currentURL 
-
+			if soup is not None:
 				#clears the URL_list for next page
 				self.URL_list.clear()
-				currentURL = nextLink
-				depth += 1
+				
+				#enter information on page
+				link_info = {}
+				link_info['url'] = currentURL
+				link_info['title'] = self.findPageTitle(soup)
+				link_info['depth'] = depth
+				self.findConnections(currentURL, soup)
+				link_info['links'] = self.URL_list.copy()
+				link_info['parent'] = myParent
+
+				#copies info into visited lsit
+				self.visited[currentURL] = link_info
+
+				#checks if keyword found to stop the search
+				if (self.keyword != None) and soup.find_all(string=re.compile(r'\b%s\b' % self.keyword, re.IGNORECASE)):
+						keywordFound = True
+						print("FOUND KEYWORD: ", self.keyword)
+
+				else: #sets up for next iteration
+				#gets random next link from list of children
+					nextLink = self.nextConnection()
+					myParent = currentURL 				
+					currentURL = nextLink
+					depth += 1
+			else:
+				nextLink = self.nextConnection()
+
 
 
 #testing functions 
@@ -273,5 +281,5 @@ def crawl(url, limit, sType, keyword):
 	return crawler.getVisited()
 
 
-#crawl("https://www.google.com", 5, "dfs", "ab8ght")
+#crawl("https://www.apple.com", 5, "dfs")
 
