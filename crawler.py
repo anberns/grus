@@ -186,7 +186,7 @@ class DFS(Spider):
 
 	def nextConnection(self):
 		if self.URL_list:		
-			random = randrange(0, len(self.URL_list)-1)
+			random = randrange(0, len(self.URL_list))
 			#returns random url from page to follow
 			return self.URL_list[random]
 		else:
