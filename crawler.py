@@ -22,6 +22,7 @@
 from urllib.parse import urljoin
 from bs4 import BeautifulSoup
 import requests
+import random
 from random import randrange
 import validators
 import json
@@ -30,6 +31,7 @@ import queue
 import os
 import re
 import sys
+import time
 
 class Spider(object):
 	name = "findLinks"
@@ -62,7 +64,7 @@ class Spider(object):
 			return soup
 
 		else:
-			print("Error loading page: ", response.status_code)
+			print("Error loading page: ", URL, " ", response.status_code)
 			return None
 
 	def findPageTitle(self, soup):
@@ -192,6 +194,9 @@ class DFS(Spider):
 		else:
 			return None
 
+	def remove(self, url):
+		if url in self.URL_list:
+			self.URL_list.remove(url)
 
 	def search(self):
 		#while the number of visited pages is less than the user-set limit
@@ -202,13 +207,12 @@ class DFS(Spider):
 		nextLink = " "
 
 		while (len(self.visited) < self.limit+1) and not keywordFound and nextLink != None:
-			#get the first/last url in the list (LIFO or FIFO), depending on search type
 			currentURL.rstrip('/')
 
 			#parse that page
 			soup = self.parsePage(currentURL)
 
-			if soup is not None:
+			if soup is not None:  #parsePage returns None if page returns bad response code
 				#clears the URL_list for next page
 				self.URL_list.clear()
 				
@@ -235,9 +239,9 @@ class DFS(Spider):
 					myParent = currentURL 				
 					currentURL = nextLink
 					depth += 1
-			else:
+			else:	#finds another connection from the current list
+				self.remove(nextLink)
 				nextLink = self.nextConnection()
-
 
 
 #testing functions 
@@ -261,6 +265,7 @@ def crawl(url, limit, sType, keyword):
 	'''
 
 	if sType == "dfs":
+		random.seed(time.time())
 		print("DFS on " + url) 
 		crawler = DFS(url, limit, keyword)
 		try:
@@ -281,5 +286,5 @@ def crawl(url, limit, sType, keyword):
 	return crawler.getVisited()
 
 
-#crawl("https://www.apple.com", 5, "dfs")
+crawl("https://www.apple.com", 15, "dfs", None)
 
