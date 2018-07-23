@@ -287,5 +287,5 @@ def crawl(url, limit, sType, keyword):
 	return crawler.getVisited()
 
 
-crawl("https://www.apple.com", 15, "dfs", None)
+#crawl("https://www.apple.com", 15, "dfs", None)
 
