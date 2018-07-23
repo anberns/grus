@@ -194,7 +194,7 @@ class DFS(Spider):
 		else:
 			return None
 
-	def remove(self, url):
+	def removeLink(self, url):
 		if url in self.URL_list:
 			self.URL_list.remove(url)
 
@@ -240,8 +240,9 @@ class DFS(Spider):
 					currentURL = nextLink
 					depth += 1
 			else:	#finds another connection from the current list
-				self.remove(nextLink)
-				nextLink = self.nextConnection()
+				self.removeLink(nextLink)
+				currentURL = self.nextConnection()
+
 
 
 #testing functions 
@@ -286,5 +287,5 @@ def crawl(url, limit, sType, keyword):
 	return crawler.getVisited()
 
 
-#crawl("https://www.apple.com", 15, "dfs", None)
+crawl("https://www.apple.com", 15, "dfs", None)
 
