@@ -1,10 +1,12 @@
+import os
+import time
 import uuid
 import json
 import sys
 import crawler
 from socket import error as SocketError
 import errno
-from flask import Flask, request, render_template, make_response
+from flask import Flask, request, render_template, make_response, redirect
 from flask_pymongo import PyMongo
 from bson.objectid import ObjectId
 from flask_sockets import Sockets
@@ -58,7 +60,7 @@ def startCrawl(ws):
 
 	#store search in database
 	test = mongo.db.test #access test collection
-postid = test.insert({'userId' : userId, 'url': url, 'limit': limit, 'sType' : sType, 'keyword' : keyword, 'path' : crawlData})
+	postid = test.insert({'userId' : userId, 'url': url, 'limit': limit, 'sType' : sType, 'keyword' : keyword, 'path' : crawlData})
 
 @app.route('/previous', methods=['POST'])
 def getPreviousCrawl():
