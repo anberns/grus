@@ -59,7 +59,7 @@
 
 	<script src="{{ url_for('static', filename='vendor/jquery.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='vendor/d3.min.js') }}"></script>
-	<script src="{{ url_for('static', filename='js/chart.js') }}"></script>
+	<script src="{{ url_for('static', filename='vendor/socket.io.js') }}"></script>
 	<script>
 		var margin = {
 			top: 10,
@@ -123,10 +123,10 @@
 
 
 		/**
-			* Reformat data from the server to fit the format of the visualization
-			*
-			* @param {*} json_data Json data from the server
-			*/
+		 * Reformat data from the server to fit the format of the visualization
+		 *
+		 * @param {*} json_data Json data from the server
+		 */
 		function parse_data(json_data) {
 			var data_obj = JSON.parse(json_data),
 				sites = Object.keys(data_obj).map(key => data_obj[key]),
@@ -154,7 +154,9 @@
 				site.links.forEach(href => {
 					if (sites.findIndex(el => el.url == href) == -1) {
 						// Add a new site to our list of sites
-						sites.push({ url: href });
+						sites.push({
+							url: href
+						});
 					}
 					links.push({
 						source: site.url,
@@ -182,10 +184,10 @@
 			});
 		}
 		/**
-			* Sets the data used for the visualization
-			*
-			* @param {*} data Object containing the nodes and links to use for the viz
-			*/
+		 * Sets the data used for the visualization
+		 *
+		 * @param {*} data Object containing the nodes and links to use for the viz
+		 */
 		function update(data) {
 
 			// Update links
@@ -311,8 +313,45 @@
 			}
 		}
 
-		var data = {{data|tojson}};
-		parse_data(data);
+		// If there is a data property sent in the response from the server,
+		// Use that as the source for data
+		if ({{data}}) {
+			var data = {{data|tojson}};
+			parse_data(data);
+		} else {
+			// If there is not data, set up a websocket to receive data in real time
+			const socket = io('http://localhost');
+
+			socket.on('data', data => parseData(data));
+
+			// DEBUGGING EVENTS
+			socket.on('pong', (latency) => console.log("Received pong. Latency: " + latency));
+
+			socket.on('ping', () => console.log("Got ping. Sending pong"));
+
+			socket.on('reconnect_failed', () => console.log("Failed to reconnect"));
+
+			socket.on('reconnect_error', (error) => console.log("Error on reconnect : " + error));
+
+			socket.on('reconnecting', (attemptNumber) => console.log("Reconnecting..."));
+
+			socket.on('reconnect_attempt', (attemptNumber) => console.log("Attempting reconnect #" +
+				attemptNumber));
+
+			socket.on('reconnect', (attemptNumber) => console.log("Reconnected"));
+
+			socket.on('disconnect', (reason) => console.log("Disconnected: " + reason));
+
+			socket.on('error', (error) => console.log("Error: " + error));
+
+			socket.on('connect_timeout', (timeout) => console.log("Connection timeout exceeded: " + timeout));
+
+
+			socket.on('connect_error', (error) => console.log("Error on connect: " + error));
+
+			socket.on('connect', () => console.log("Connected"));
+
+		}
 	</script>
 </body>
 
