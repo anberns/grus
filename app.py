@@ -15,7 +15,11 @@ app.config["MONGO_URI"] = "mongodb://heroku_zlgnt8hx:8qj45t037p6on1oj0r472epmhq@
 mongo = PyMongo(app)
 sockets = Sockets(app)
 
-global userId, url, limit, sType, keyword
+userId = None
+url = None
+limit = None
+sType = None
+keyword = None
 
 # index page with form
 @app.route('/')
