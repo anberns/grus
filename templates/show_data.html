@@ -313,7 +313,7 @@
 		var data = {{data|tojson}};
 		if (data) {
 			console.log("Data sent with response, displaying static data");
-
+			console.log(data);
 			parse_data(data);
 		} else {
 			console.log("No data sent with response, setting up websocket");
