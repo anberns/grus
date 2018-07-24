@@ -51,7 +51,7 @@ def launch():
 		time.sleep(.1)
 		return redirect('/crawl')
 
-	return render_template('show_data.html')
+	return render_template('show_data.html', data=None)
 
 @sockets.route('/crawl')
 def startCrawl(ws):

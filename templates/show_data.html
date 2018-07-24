@@ -57,12 +57,6 @@
 
 	<script src="{{ url_for('static', filename='vendor/jquery.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='vendor/d3.min.js') }}"></script>
-	<script type="text/javascript">
-		window.appConfig = {
-			data : '{{data}}'
-	}
-	</script>
-
 	<script>
 		var margin = {
 			top: 10,
@@ -316,11 +310,10 @@
 
 		// If there is a data property sent in the response from the server,
 		// Use that as the source for data
-		var data = appConfig.data;
+		var data = {{data|tojson}};
 		if (data) {
 			console.log("Data sent with response, displaying static data");
 
-			// something needs to happen here
 			parse_data(data);
 		} else {
 			console.log("No data sent with response, setting up websocket");
