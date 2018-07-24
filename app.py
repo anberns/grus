@@ -51,7 +51,7 @@ def launch():
 		time.sleep(.1)
 		return redirect('/crawl')
 
-	return render_template('show_data_socket.html')
+	return render_template('show_data.html')
 
 @sockets.route('/crawl')
 def startCrawl(ws):
@@ -72,7 +72,6 @@ def getPreviousCrawl():
 
 	#get data from id
 	queryData = test.find_one({'_id' : ObjectId(docId)})
-	print(queryData['path'])
 
 	return render_template('show_data.html', data=queryData['path'], url=queryData['url'], type=queryData['sType'], keyword=queryData['keyword'])
 

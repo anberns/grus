@@ -312,9 +312,12 @@
 		// If there is a data property sent in the response from the server,
 		// Use that as the source for data
 		if ({{data}}) {
+			console.log("Data sent with response, displaying static data");
+
 			var data = {{data|tojson}};
 			parse_data(data);
 		} else {
+			console.log("No data sent with response, setting up websocket");
 
 			// Set up the location of the host websocket
             var scheme = window.location.protocol == 'https:' ? 'wss://' : 'ws://';
