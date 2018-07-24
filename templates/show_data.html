@@ -121,10 +121,10 @@
 
 
 		/**
-			* Reformat data from the server to fit the format of the visualization
-			*
-			* @param {*} json_data Json data from the server
-			*/
+		* Reformat data from the server to fit the format of the visualization
+		*
+		* @param {*} json_data Json data from the server
+		*/
 		function parse_data(json_data) {
 			var data_obj = JSON.parse(json_data),
 				sites = Object.keys(data_obj).map(key => data_obj[key]),
@@ -180,10 +180,10 @@
 			});
 		}
 		/**
-			* Sets the data used for the visualization
-			*
-			* @param {*} data Object containing the nodes and links to use for the viz
-			*/
+		* Sets the data used for the visualization
+		*
+		* @param {*} data Object containing the nodes and links to use for the viz
+		*/
 		function update(data) {
 
 			// Update links
@@ -309,8 +309,44 @@
 			}
 		}
 
-		var data = {{data|tojson}};
-		parse_data(data);
+		// If there is a data property sent in the response from the server,
+		// Use that as the source for data
+		if ({{data}}) {
+			var data = {{data|tojson}};
+			parse_data(data);
+		} else {
+
+			// Set up the location of the host websocket
+            var scheme = window.location.protocol == 'https:' ? 'wss://' : 'ws://';
+            var host = scheme + location.host + "/crawl";
+			console.log(host);
+			create_socket(host);
+
+			// Start up the client websocket
+			function create_socket(hostname) {
+				var ws = new WebSocket(hostname);
+
+				ws.onmessage = function(event) {
+					console.log(event.data);
+					parse_data(event.data);
+				};
+
+				ws.onopen = function() {
+					console.log("Socket Connected");
+				}
+
+				ws.onclose = function(event) {
+					console.log("Socket Closed: " + event.reason);
+					//setTimeout(reconnect(hostname), 1000);
+				}
+			}
+
+			function reconnect(hostname) {
+				console.log("Reconnecting....");
+				create_socket(hostname);
+			}
+
+		}
 	</script>
 </body>
 
