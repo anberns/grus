@@ -15,7 +15,7 @@
 #	VALIDATORS: used to validate the urls found
 #	http://validators.readthedocs.io/en/latest/#
 
-#	Queue module: Thinking ahead...states "especially useful in 
+#	Queue module: Thinking ahead...states "especially useful in
 #	threaded programming when information must be exchanged safely between multiple threads"
 
 
@@ -95,7 +95,7 @@ class BFS(Spider):
 		for link in soup.find_all('a', href=True):
 			url = link['href']
 
-			#handles relative URLs - by looking for links lacking http and 
+			#handles relative URLs - by looking for links lacking http and
 			#joining these to the base URL to form an absolute URL
 			if not url.startswith('http') and not url.startswith('#'):
 				url = urljoin(base, url)
@@ -128,7 +128,7 @@ class BFS(Spider):
 
 			parent = self.URL_list.get()
 			currentURL = parent.get('url')
-			depth = parent.get('depth')	
+			depth = parent.get('depth')
 			myParent = parent.get('parent')
 			currentURL.rstrip('/')
 
@@ -148,10 +148,10 @@ class BFS(Spider):
 					link_info['depth'] = depth
 					link_info['parent'] = myParent
 
-					# send info to visualizer
-					ws.send(json.dumps(link_info))
-
 					self.visited[currentURL] = link_info
+
+					# send info to visualizer
+					ws.send(json.dumps(self.visited))
 
 					#all children must be put into the queue as URL_list for next iteration
 					for link in link_info['links']:
@@ -165,7 +165,7 @@ class BFS(Spider):
 						keywordFound = True
 						print("FOUND KEYWORD: ", self.keyword)
 
-			
+
 class DFS(Spider):
 
 	def __init__ (self, URL, limit, keyword=None):
@@ -177,7 +177,7 @@ class DFS(Spider):
 		for link in soup.find_all('a', href=True):
 			url = link['href']
 
-			#handles relative URLs - by looking for links lacking http and 
+			#handles relative URLs - by looking for links lacking http and
 			#joining these to the base URL to form an absolute URL
 			if not url.startswith('http') and not url.startswith('#'):
 				url = urljoin(base, url)
@@ -191,7 +191,7 @@ class DFS(Spider):
 				self.URL_list.append(url)
 
 	def nextConnection(self):
-		if self.URL_list:		
+		if self.URL_list:
 			random = randrange(0, len(self.URL_list))
 			#returns random url from page to follow
 			return self.URL_list[random]
@@ -219,7 +219,7 @@ class DFS(Spider):
 			if soup is not None:  #parsePage returns None if page returns bad response code
 				#clears the URL_list for next page
 				self.URL_list.clear()
-				
+
 				#enter information on page
 				link_info = {}
 				link_info['url'] = currentURL
@@ -229,11 +229,10 @@ class DFS(Spider):
 				link_info['links'] = self.URL_list.copy()
 				link_info['parent'] = myParent
 
-				# send link_info to visualizer
-				ws.send(json.dumps(link_info))
-
-				#copies info into visited lsit
 				self.visited[currentURL] = link_info
+
+				# send info to visualizer
+				ws.send(json.dumps(self.visited))
 
 				#checks if keyword found to stop the search
 				if (self.keyword != None) and soup.find_all(string=re.compile(r'\b%s\b' % self.keyword, re.IGNORECASE)):
@@ -243,7 +242,7 @@ class DFS(Spider):
 				else: #sets up for next iteration
 				#gets random next link from list of children
 					nextLink = self.nextConnection()
-					myParent = currentURL 				
+					myParent = currentURL
 					currentURL = nextLink
 					depth += 1
 			else:	#finds another connection from the current list
@@ -252,7 +251,7 @@ class DFS(Spider):
 
 
 
-#testing functions 
+#testing functions
 def crawl(ws, url, limit, sType, keyword):
 
 	'''
@@ -265,7 +264,7 @@ def crawl(ws, url, limit, sType, keyword):
 	browser = webdriver.Chrome(chrome_options=options, executable_path="./chromedriver")
 	'''
 
-	'''	
+	'''
 	#LOCAL
 	chrome_options = Options(Proxy = null)
 	chrome_options.add_argument("--headless")
@@ -274,14 +273,14 @@ def crawl(ws, url, limit, sType, keyword):
 
 	if sType == "dfs":
 		random.seed(time.time())
-		print("DFS on " + url) 
+		print("DFS on " + url)
 		crawler = DFS(url, limit, keyword)
 		try:
 			crawler.search(ws)
 			crawler.printVisited()
 		except:
 			print(sys.exc_info()[0])
-	
+
 	else:
 		print("BFS on " + url)
 		crawler = BFS(url, limit, keyword)
