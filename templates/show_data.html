@@ -140,11 +140,8 @@
 
 				// Add a link for a site we visited
 				if (site.parent) {
-					links.push({
-						source: site.parent,
-						target: site.url,
-						in_path: true
-					});
+					links.find(el => el.source == site.parent &&
+						el.target == site.url).in_path = true;
 				}
 
 				// Add links to ones found on pages
@@ -319,8 +316,8 @@
 			console.log("No data sent with response, setting up websocket");
 
 			// Set up the location of the host websocket
-            var scheme = window.location.protocol == 'https:' ? 'wss://' : 'ws://';
-            var host = scheme + location.host + "/crawl";
+			var scheme = window.location.protocol == 'https:' ? 'wss://' : 'ws://';
+			var host = scheme + location.host + "/crawl";
 			console.log(host);
 			create_socket(host);
 
