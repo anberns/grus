@@ -31,7 +31,7 @@
 		text {
 			font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
 			text-anchor: middle;
-			font-size: 12px;
+			font-size: 10px;
 			font-weight: bolder;
 			fill: black;
 			text-shadow: 0px 0px 2px white;
@@ -76,6 +76,9 @@
 			.attr('width', width + margin.left + margin.right)
 			.attr('height', height + margin.top + margin.bottom)
 			.call(responsivefy)
+			.call(d3.zoom().on("zoom", function () {
+				svg.attr("transform", d3.event.transform)
+			 }))
 			.append('g')
 			.attr('transform', `translate(${margin.left}, ${margin.top})`);
 
