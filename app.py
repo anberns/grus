@@ -32,7 +32,7 @@ def index():
 		# get stored data
 		test = mongo.db.test  # access test collection
 		storedCrawls = test.find({'userId': userId})
-		return render_template('index.html')#, crawls=storedCrawls)
+		return render_template('index.html', crawls=storedCrawls)
 	else:
 		userId = str(uuid.uuid4())
 		response = make_response(render_template('index.html'))
