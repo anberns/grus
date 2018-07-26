@@ -65,7 +65,7 @@ def launch():
 
 	#new process for crawler
 	if not os.fork():
-		time.sleep(.5)
+		#time.sleep(.5)
 		return redirect('/crawl')
 
 	return render_template('show_data.html', data=None, url=url, keyword=keyword, type=sType)
