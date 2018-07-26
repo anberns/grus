@@ -6,11 +6,14 @@ import sys
 import crawler
 from socket import error as SocketError
 import errno
-from flask import Flask, request, render_template, make_response, redirect
+from flask import Flask, request, render_template, make_response, redirect, session
 from flask_pymongo import PyMongo
 from bson.objectid import ObjectId
 from flask_sockets import Sockets
+
 app = Flask(__name__)
+app.secret_key = os.urandom(24)
+
 app.config["MONGO_URI"] = "mongodb://heroku_l49w3pqw:corelnjkhviq52q7gsmalc504c@ds139331.mlab.com:39331/heroku_l49w3pqw"
 mongo = PyMongo(app)
 sockets = Sockets(app)
@@ -51,18 +54,32 @@ def launch():
 	sType = request.form['type']
 	keyword = request.form['keyword']
 
+	session['userId']= userId
+	session['url'] = url
+	session['limit'] = limit
+	session['sType'] = sType
+	session['keyword'] = keyword
+
 	#adding tracing statement
 	print("Value Before Fork: userID=", userId, " url=", url, " limit=", limit, " sType=", sType, "keyword=", keyword)
 
 	#new process for crawler
-	#if not os.fork():
-	#	time.sleep(.1)
-	#	return redirect('/crawl')
-	redirect('/crawl')
+	if not os.fork():
+		time.sleep(.1)
+		return redirect('/crawl')
+
 	return render_template('show_data.html', data=None, url=url, keyword=keyword, type=sType)
+
 
 @sockets.route('/crawl')
 def startCrawl(ws):
+	global userId, url, limit, sType, keyword
+	userId = session['userId']
+	url = session['url'] 
+	limit = session['limit'] 
+	sType = session['sType'] 
+	keyword = session['keyword'] 
+
 	#adding tracing statement
 	print("Value before crawl: userID=", userId, " url=", url, " limit=", limit, " sType=", 
 		  sType, "keyword=", keyword)
@@ -73,6 +90,7 @@ def startCrawl(ws):
 	mongo = PyMongo(app)
 	test = mongo.db.test #access test collection
 	postid = test.insert({'userId' : userId, 'url': url, 'limit': limit, 'sType' : sType, 'keyword' : keyword, 'path' : crawlData})
+
 
 @app.route('/previous', methods=['POST'])
 def getPreviousCrawl():
