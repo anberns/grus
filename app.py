@@ -15,6 +15,7 @@ app.config["MONGO_URI"] = "mongodb://heroku_l49w3pqw:corelnjkhviq52q7gsmalc504c@
 mongo = PyMongo(app)
 sockets = Sockets(app)
 
+global userId, url, limit, sType, keyword
 userId = None
 url = None
 limit = None
