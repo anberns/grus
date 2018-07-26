@@ -51,16 +51,13 @@ def launch():
 	sType = request.form['type']
 	keyword = request.form['keyword']
 
-	#new process for crawler
-	if not os.fork():
-		time.sleep(.1)
-		return redirect('/crawl')
-
+	redirect('/crawl')
 	return render_template('show_data.html', data=None, url=url, keyword=keyword, type=sType)
+
 
 @sockets.route('/crawl')
 def startCrawl(ws):
-	global url, limit, sType, keyword
+	global userId, url, limit, sType, keyword
 	crawlData = json.dumps(crawler.crawl(ws, url, int(limit), sType, keyword))
 
 	#store search in database

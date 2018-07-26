@@ -6,9 +6,6 @@
 
 # References:
 #	https://www.digitalocean.com/community/tutorials/how-to-scrape-web-pages-with-beautiful-soup-and-python-3
-
-#	SELENIUM: changed from requests because it wasn't handling pages made with React
-#	https://medium.com/@pyzzled/running-headless-chrome-with-selenium-in-python-3f42d1f5ff1d
 #	BEAUTIFUL SOUP: used to parse the page for data (urls)
 #	http://www.pythonforbeginners.com/beautifulsoup/beautifulsoup-4-python
 #	https://beautiful-soup-4.readthedocs.io/en/latest/
@@ -34,16 +31,7 @@ import sys
 import time
 
 class Spider(object):
-	name = "findLinks"
-
-	'''def __init__(self, *args, **kwargs):
-		super(Spider, self).__init__(*args, **kwargs)
-
-		self.start_urls = [kwargs.get('url')]
-		#self.limit = kwargs.get('limit')
-		#self.keyword = kwargs.get('keyword')
-
-	'''
+	
 	def __init__(self, URL, limit, keyword=None):
 		self.start = URL
 		self.limit = limit
