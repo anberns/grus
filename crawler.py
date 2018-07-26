@@ -151,7 +151,7 @@ class BFS(Spider):
 					self.visited[currentURL] = link_info
 
 					# send info to visualizer
-					ws.send(json.dumps(self.visited))
+					ws.send(json.dumps(link_info))
 
 					#all children must be put into the queue as URL_list for next iteration
 					for link in link_info['links']:
@@ -232,7 +232,7 @@ class DFS(Spider):
 				self.visited[currentURL] = link_info
 
 				# send info to visualizer
-				ws.send(json.dumps(self.visited))
+				ws.send(json.dumps(link_info))
 
 				#checks if keyword found to stop the search
 				if (self.keyword != None) and soup.find_all(string=re.compile(r'\b%s\b' % self.keyword, re.IGNORECASE)):
