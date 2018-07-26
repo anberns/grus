@@ -31,7 +31,7 @@
 		text {
 			font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
 			text-anchor: middle;
-			font-size: 12px;
+			font-size: 10px;
 			font-weight: bolder;
 			fill: black;
 			text-shadow: 0px 0px 2px white;
@@ -67,7 +67,6 @@
 
 		var width = 425 - margin.left - margin.right;
 		var height = 625 - margin.top - margin.bottom;
-		var num_nodes;
 		var old_nodes;
 
 
@@ -77,13 +76,16 @@
 			.attr('width', width + margin.left + margin.right)
 			.attr('height', height + margin.top + margin.bottom)
 			.call(responsivefy)
+			.call(d3.zoom().on("zoom", function () {
+				svg.attr("transform", d3.event.transform)
+			 }))
 			.append('g')
 			.attr('transform', `translate(${margin.left}, ${margin.top})`);
 
 		// Create the force simulation that governs the forces on the nodes
 		var simulation = d3.forceSimulation()
 			.force("link", d3.forceLink().id(d => d.url))
-			.force("charge", d3.forceManyBody())
+			.force("charge", d3.forceManyBody().distanceMax(250))
 			.force("center", d3.forceCenter(width / 2, height / 2))
 			.force("collide", d3.forceCollide(d => d.visited ? 20 : 0))
 			.on("tick", ticked);
@@ -98,7 +100,7 @@
 			.attr("refY", 0)
 			.attr("markerWidth", d => d == "in_path" ? 4 : 0)
 			.attr("markerHeight", d => d == "in_path" ? 4 : 0)
-			.attr('fill', "#333")
+			.attr('fill', "#222")
 			.attr("orient", "auto")
 			.append("svg:path")
 			.attr("d", "M0,-5L10,0L0,5");
@@ -120,17 +122,14 @@
 
 
 		/**
-		* Reformat data from the server to fit the format of the visualization
-		*
-		* @param {*} json_data Json data from the server
-		*/
+		 * Reformat data from the server to fit the format of the visualization
+		 *
+		 * @param {*} json_data Json data from the server
+		 */
 		function parse_data(json_data) {
 			var data_obj = JSON.parse(json_data),
 				sites = Object.keys(data_obj).map(key => data_obj[key]),
 				links = [];
-
-			// Set the number of colored sites we will have
-			num_nodes = sites.length;
 
 			// Create the set of links for the visualization to use
 			sites.forEach(site => {
@@ -140,18 +139,17 @@
 
 				// Add a link for a site we visited
 				if (site.parent) {
-					links.push({
-						source: site.parent,
-						target: site.url,
-						in_path: true
-					});
+					links.find(el => el.source == site.parent &&
+						el.target == site.url).in_path = true;
 				}
 
 				// Add links to ones found on pages
 				site.links.forEach(href => {
 					if (sites.findIndex(el => el.url == href) == -1) {
 						// Add a new site to our list of sites
-						sites.push({ url: href });
+						sites.push({
+							url: href
+						});
 					}
 					links.push({
 						source: site.url,
@@ -179,16 +177,16 @@
 			});
 		}
 		/**
-		* Sets the data used for the visualization
-		*
-		* @param {*} data Object containing the nodes and links to use for the viz
-		*/
+		 * Sets the data used for the visualization
+		 *
+		 * @param {*} data Object containing the nodes and links to use for the viz
+		 */
 		function update(data) {
 
 			// Update links
 			link = link.data(data.links, d => d.source.url + "-" + d.target.url)
 				.attr("stroke-width", d => d.in_path ? 2 : 1)
-				.attr("stroke", d => d.in_path ? "#333" : "#666")
+				.attr("stroke", d => d.in_path ? "#222" : "#bbb")
 				.attr('marker-end', d => d.in_path ? 'url(#in_path)' : 'url(#out_of_path)');
 
 			// Delete removed links
@@ -196,7 +194,7 @@
 
 			// Add any new links
 			link = link.enter().append("line")
-				.attr("stroke", d => d.in_path ? "#333" : "#666")
+				.attr("stroke", d => d.in_path ? "#222" : "#bbb")
 				.attr("stroke-width", d => d.in_path ? 2 : 1)
 				.attr('marker-end', d => d.in_path ? 'url(#in_path)' : 'url(#out_of_path)')
 				.merge(link);
@@ -205,14 +203,14 @@
 			// Update nodes
 			node = node.data(data.nodes, d => d.url)
 				.attr("r", d => d.visited ? 5 : 3)
-				.attr("fill", (d, i) => color(d.visited, i));
+				.attr("fill", d => d.visited ? "#222" : "#bbb");
 
 			// Delete removed sites
 			node.exit().remove();
 
 			// Add any new sites
 			node = node.enter().append("circle")
-				.attr("fill", (d, i) => color(d.visited, i))
+				.attr("fill", d => d.visited ? "#222" : "#bbb")
 				.attr("r", d => d.visited ? 5 : 3)
 				.call(d3.drag()
 					.on("start", drag_started)
@@ -247,17 +245,6 @@
 			// Set the nodes and links for the visualization
 			simulation.nodes(data.nodes);
 			simulation.force("link").links(data.links);
-		}
-
-		function color(was_visited, i) {
-			var h = 0,
-				s = 0,
-				l = 55;
-			if (was_visited) {
-				h = (360 / (num_nodes) * i);
-				s = 55;
-			}
-			return "hsl(" + h + ", " + s + "%, " + l + "%)";
 		}
 
 		function ticked() {
@@ -319,8 +306,8 @@
 			console.log("No data sent with response, setting up websocket");
 
 			// Set up the location of the host websocket
-            var scheme = window.location.protocol == 'https:' ? 'wss://' : 'ws://';
-            var host = scheme + location.host + "/crawl";
+			var scheme = window.location.protocol == 'https:' ? 'wss://' : 'ws://';
+			var host = scheme + location.host + "/crawl";
 			console.log(host);
 			create_socket(host);
 
