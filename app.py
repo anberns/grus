@@ -55,10 +55,10 @@ def launch():
 	print("Value Before Fork: userID=", userId, " url=", url, " limit=", limit, " sType=", sType, "keyword=", keyword)
 
 	#new process for crawler
-	if not os.fork():
-		time.sleep(.1)
-		return redirect('/crawl')
-
+	#if not os.fork():
+	#	time.sleep(.1)
+	#	return redirect('/crawl')
+	redirect('/crawl')
 	return render_template('show_data.html', data=None, url=url, keyword=keyword, type=sType)
 
 @sockets.route('/crawl')
