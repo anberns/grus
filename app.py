@@ -20,6 +20,7 @@ url = None
 limit = None
 sType = None
 keyword = None
+global userId, url, limit, sType, keyword
 
 # index page with form
 @app.route('/')
