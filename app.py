@@ -51,17 +51,20 @@ def launch():
 	sType = request.form['type']
 	keyword = request.form['keyword']
 
-	redirect('/crawl')
-	return render_template('show_data.html', data=None, url=url, keyword=keyword, type=sType)
+	#new process for crawler
+	if not os.fork():
+		time.sleep(.1)
+		return redirect('/crawl')
 
+	return render_template('show_data.html', data=None, url=url, keyword=keyword, type=sType)
 
 @sockets.route('/crawl')
 def startCrawl(ws):
 	global userId, url, limit, sType, keyword
 	crawlData = json.dumps(crawler.crawl(ws, url, int(limit), sType, keyword))
 
-	#store search in database
 	mongo = PyMongo(app)
+	#store search in database
 	test = mongo.db.test #access test collection
 	postid = test.insert({'userId' : userId, 'url': url, 'limit': limit, 'sType' : sType, 'keyword' : keyword, 'path' : crawlData})
 
