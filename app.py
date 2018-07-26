@@ -64,6 +64,8 @@ def startCrawl(ws):
 	crawlData = json.dumps(crawler.crawl(ws, url, int(limit), sType, keyword))
 
 	#store search in database
+	mongo = PyMongo(app)
+	sockets = Sockets(app)
 	test = mongo.db.test #access test collection
 	postid = test.insert({'userId' : userId, 'url': url, 'limit': limit, 'sType' : sType, 'keyword' : keyword, 'path' : crawlData})
 
