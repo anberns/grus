@@ -30,14 +30,14 @@ def index():
 
 	if userId:
 		# get stored data
-		test = mongo.db.test  # access test collection
-		storedCrawls = test.find({'userId': userId})
-		return render_template('index.html', crawls=storedCrawls)
+		#test = mongo.db.test  # access test collection
+		#storedCrawls = test.find({'userId': userId})
+		return render_template('index.html')#, crawls=storedCrawls)
 	else:
 		userId = str(uuid.uuid4())
-		resp = make_response(render_template('index.html'))
-		resp.set_cookie('userId', userId)
-		return resp
+		response = make_response(render_template('index.html'))
+		response.set_cookie('userId', userId)
+		return response
 
 
 
@@ -64,9 +64,9 @@ def startCrawl(ws):
 	crawlData = json.dumps(crawler.crawl(ws, url, int(limit), sType, keyword))
 
 	#store search in database
-	mongo = PyMongo(app)
-	test = mongo.db.test #access test collection
-	postid = test.insert({'userId' : userId, 'url': url, 'limit': limit, 'sType' : sType, 'keyword' : keyword, 'path' : crawlData})
+	#mongo = PyMongo(app)
+	#test = mongo.db.test #access test collection
+	#postid = test.insert({'userId' : userId, 'url': url, 'limit': limit, 'sType' : sType, 'keyword' : keyword, 'path' : crawlData})
 
 @app.route('/previous', methods=['POST'])
 def getPreviousCrawl():
