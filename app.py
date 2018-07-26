@@ -51,6 +51,9 @@ def launch():
 	sType = request.form['type']
 	keyword = request.form['keyword']
 
+	#adding tracing statement
+	print("Value Before Fork: userID=", userId, " url=", url, " limit=", limit, " sType=", sType, "keyword=", keyword)
+
 	#new process for crawler
 	if not os.fork():
 		time.sleep(.1)
@@ -61,6 +64,11 @@ def launch():
 @sockets.route('/crawl')
 def startCrawl(ws):
 	global userId, url, limit, sType, keyword
+
+	#adding tracing statement
+	print("Value before crawl: userID=", userId, " url=", url, " limit=", limit, " sType=", 
+		  sType, "keyword=", keyword)
+
 	crawlData = json.dumps(crawler.crawl(ws, url, int(limit), sType, keyword))
 
 	mongo = PyMongo(app)
