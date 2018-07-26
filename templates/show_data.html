@@ -127,53 +127,49 @@
 		 * @param {*} json_data Json data from the server
 		 */
 		function parse_data(json_data) {
-			var data_obj = JSON.parse(json_data),
-				sites = Object.keys(data_obj).map(key => data_obj[key]),
-				links = [];
+			var old_sites = d3.selectAll('circle').data(),
+				old_links = d3.selectAll('line').data();
 
-			// Create the set of links for the visualization to use
-			sites.forEach(site => {
-				// Because forEach works with a copy of the original, site can only be
-				// a site we have visited. Mark it as such
-				site.visited = true;
+			var site = JSON.parse(json_data),
+				old_site = old_sites.find(el => el.url == site.url);
 
-				// Add a link for a site we visited
-				if (site.parent) {
-					links.find(el => el.source == site.parent &&
-						el.target == site.url).in_path = true;
+			site.visited = true;
+
+			if (old_site) {
+				for (var prop in site) {
+					old_site[prop] = site[prop];
 				}
+			} else {
+				old_sites.push(site);
+			}
+			console.log(old_sites.find(el => el.url == site.url));
 
-				// Add links to ones found on pages
-				site.links.forEach(href => {
-					if (sites.findIndex(el => el.url == href) == -1) {
-						// Add a new site to our list of sites
-						sites.push({
-							url: href
-						});
-					}
-					links.push({
-						source: site.url,
-						target: href,
-						in_path: false
+			// Add a link for a site we visited
+			if (site.parent) {
+				old_links.find(el => el.source.url == site.parent &&
+					el.target.url == site.url).in_path = true;
+			}
+
+			// Add links to ones found on pages
+			site.links.forEach(href => {
+				if (old_sites.findIndex(el => el.url == href) == -1) {
+					// Add a new site to our list of sites
+					old_sites.push({
+						url: href,
+						x: old_site ? old_site.x : width / 2,
+						y: old_site ? old_site.y : height / 2
 					});
+				}
+				old_links.push({
+					source: site.url,
+					target: href,
+					in_path: false
 				});
 			});
 
-			// Get the current nodes in the visualization to preserve positions
-			var old_nodes = d3.selectAll('circle').data();
-			sites.forEach(site => {
-				var old_site = old_nodes.find(el => el.url == site.url);
-				if (old_site) {
-					site.x = old_site.x;
-					site.y = old_site.y;
-					site.vx = old_site.vx;
-					site.vy = old_site.vy;
-				}
-			});
-
 			update({
-				nodes: sites,
-				links: links
+				nodes: old_sites,
+				links: old_links
 			});
 		}
 		/**
@@ -245,6 +241,7 @@
 			// Set the nodes and links for the visualization
 			simulation.nodes(data.nodes);
 			simulation.force("link").links(data.links);
+			simulation.alpha(0.15).restart().alphaTarget(0);
 		}
 
 		function ticked() {
