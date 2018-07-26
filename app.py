@@ -63,8 +63,6 @@ def launch():
 
 @sockets.route('/crawl')
 def startCrawl(ws):
-	global userId, url, limit, sType, keyword
-
 	#adding tracing statement
 	print("Value before crawl: userID=", userId, " url=", url, " limit=", limit, " sType=", 
 		  sType, "keyword=", keyword)
