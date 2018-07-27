@@ -63,7 +63,6 @@ def launch():
 	#adding tracing statement
 	print("Value Before Fork: userID=", userId, " url=", url, " limit=", limit, " sType=", sType, "keyword=", keyword)
 
-	time.sleep(1)
 	return render_template('show_data.html', data=None, url=url, keyword=keyword, type=sType)
 
 
@@ -80,6 +79,8 @@ def startCrawl(ws):
 	print("Value before crawl: userID=", userId, " url=", url, " limit=", limit, " sType=", 
 		  sType, "keyword=", keyword)
 
+	
+	time.sleep(1)
 	crawlData = json.dumps(crawler.crawl(ws, url, int(limit), sType, keyword))
 
 	#store search in database
