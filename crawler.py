@@ -265,6 +265,7 @@ def crawl(ws, url, limit, sType, keyword):
 		crawler = DFS(url, limit, keyword)
 		try:
 			crawler.search(ws)
+			ws.close()
 			crawler.printVisited()
 		except:
 			print(sys.exc_info()[0])
@@ -274,6 +275,7 @@ def crawl(ws, url, limit, sType, keyword):
 		crawler = BFS(url, limit, keyword)
 		try:
 			crawler.search(ws)
+			ws.close()
 			crawler.printVisited()
 		except:
 			print(sys.exc_info()[0])
