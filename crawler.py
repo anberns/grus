@@ -265,20 +265,22 @@ def crawl(ws, url, limit, sType, keyword):
 		crawler = DFS(url, limit, keyword)
 		try:
 			crawler.search(ws)
-			ws.close()
+			ws.close(1000, "Closing Connection Normally")
 			crawler.printVisited()
 		except:
 			print(sys.exc_info()[0])
+			ws.close(1000, "Closing Connection Due to Crawler Error")
 
 	else:
 		print("BFS on " + url)
 		crawler = BFS(url, limit, keyword)
 		try:
 			crawler.search(ws)
-			ws.close()
+			ws.close(1000, "Closing Connection Normally")
 			crawler.printVisited()
 		except:
 			print(sys.exc_info()[0])
+			ws.close(1000, "Closing Connection Due to Crawler Error")
 
 	return crawler.getVisited()
 
