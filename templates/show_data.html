@@ -316,6 +316,7 @@
 				ws.onmessage = function(event) {
 					console.log(event.data);
 					parse_data(event.data);
+					return false;
 				};
 
 				ws.onopen = function() {
