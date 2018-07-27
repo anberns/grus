@@ -331,6 +331,7 @@
 					console.log("Close Code: " + event.code);
 					//setTimeout(reconnect(hostname), 1000);
 				};
+				setTimeout(create_socket, 500);
 			}
 
 			function reconnect(hostname) {
