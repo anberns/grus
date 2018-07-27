@@ -70,7 +70,7 @@ def launch():
 def startCrawl(ws):
 	global userId, url, limit, sType, keyword
 	userId = session['userId']
-	url = "apple.com" #session['url'] 
+	url = "http://www.apple.com" #session['url'] 
 	limit = 6 #session['limit'] 
 	sType = "dfs" #session['sType'] 
 	keyword = None #session['keyword'] 
