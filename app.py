@@ -67,9 +67,7 @@ def launch():
 	if not os.fork():
 		time.sleep(.5)
 		print("Forking...")
-		return redirect('/crawl')
 
-	time.sleep(.5)
 	return render_template('show_data.html', data=None, url=url, keyword=keyword, type=sType)
 
 
