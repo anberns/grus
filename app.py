@@ -6,7 +6,7 @@ import sys
 import crawler
 from socket import error as SocketError
 import errno
-from flask import Flask, request, render_template, make_response, redirect, session
+from flask import Flask, request, render_template, make_response, session
 from flask_pymongo import PyMongo
 from bson.objectid import ObjectId
 from flask_sockets import Sockets
@@ -17,13 +17,6 @@ app.secret_key = os.urandom(24)
 app.config["MONGO_URI"] = "mongodb://heroku_l49w3pqw:corelnjkhviq52q7gsmalc504c@ds139331.mlab.com:39331/heroku_l49w3pqw"
 mongo = PyMongo(app)
 sockets = Sockets(app)
-
-global userId, url, limit, sType, keyword
-userId = None
-url = None
-limit = None
-sType = None
-keyword = None
 
 # index page with form
 @app.route('/')
@@ -47,46 +40,43 @@ def index():
 # to be used to call webcrawler with posted data
 @app.route('/submit', methods=['POST'])
 def launch():
-	global userId, url, limit, sType, keyword
+	#global userId, url, limit, sType, keyword
 	userId = request.cookies.get('userId')
-	url = "https://" + request.form['url']
-	limit = request.form['limit']
-	sType = request.form['type']
-	keyword = request.form['keyword']
+	url = "https://www.nytimes.com" #"https://" + request.form['url']
+	limit = 5 #request.form['limit']
+	sType = "dfs" #request.form['type']
+	keyword = None #request.form['keyword']
 
-	session['userId']= userId
-	session['url'] = url
-	session['limit'] = limit
-	session['sType'] = sType
-	session['keyword'] = keyword
+	#session['userId']= userId
+	#session['url'] = url
+	#session['limit'] = limit
+	#session['sType'] = sType
+	#session['keyword'] = keyword
 
 	#adding tracing statement
 	print("Value Before Fork: userID=", userId, " url=", url, " limit=", limit, " sType=", sType, "keyword=", keyword)
 
-	return render_template('show_data.html', data=None, url=url, keyword=keyword, type=sType)
+	return render_template('show_data.html', data=None, url=url, keyword=keyword, type=sType, limit=limit)
 
 
 @sockets.route('/crawl')
 def startCrawl(ws):
-	global userId, url, limit, sType, keyword
-	userId = session['userId']
-	url = session['url'] 
-	limit = session['limit'] 
-	sType = session['sType'] 
-	keyword = session['keyword'] 
+	#global userId, url, limit, sType, keyword
+	#userId = session['userId']
+	url = "https://www.nytimes.com" #session['url'] 
+	limit = 5 #session['limit'] 
+	sType = "dfs" #session['sType'] 
+	keyword = None #session['keyword'] 
 
 	#adding tracing statement
-	print("Value before crawl: userID=", userId, " url=", url, " limit=", limit, " sType=", 
-		  sType, "keyword=", keyword)
+	print("Value before crawl: userID=", userId, " url=", url, " limit=", limit, " sType=", sType, "keyword=", keyword)
 
-	
-	time.sleep(1)
 	crawlData = json.dumps(crawler.crawl(ws, url, int(limit), sType, keyword))
 
 	#store search in database
-	mongo = PyMongo(app)
-	test = mongo.db.test #access test collection
-	postid = test.insert({'userId' : userId, 'url': url, 'limit': limit, 'sType' : sType, 'keyword' : keyword, 'path' : crawlData})
+	#mongo = PyMongo(app)
+	#test = mongo.db.test #access test collection
+	#postid = test.insert({'userId' : userId, 'url': url, 'limit': limit, 'sType' : sType, 'keyword' : keyword, 'path' : crawlData})
 
 
 @app.route('/previous', methods=['POST'])
