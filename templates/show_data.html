@@ -316,11 +316,11 @@
 				ws.onmessage = function(event) {
 					console.log(event.data);
 					parse_data(event.data);
-					return false;
 				};
 
 				ws.onopen = function() {
 					console.log("Socket Connected");
+					sleep(500);
 				};
 
 				ws.onerror = function() {
@@ -337,6 +337,9 @@
 			function reconnect(hostname) {
 				console.log("Reconnecting....");
 				create_socket(hostname);
+			}
+			function sleep (time) {
+  				return new Promise((resolve) => setTimeout(resolve, time));
 			}
 
 		}
