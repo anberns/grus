@@ -264,17 +264,7 @@ def crawl(ws, url, limit, sType, keyword):
 		print("DFS on " + url)
 		crawler = DFS(url, limit, keyword)
 		try:
-			#crawler.search(ws)
-			
-
-			# send info to visualizer
-			for i in range(0,20):
-				link_info = {}
-				link_info['url'] = "www.apple.com"
-				link_info['title'] = "title"
-				link_info['depth'] = i
-				time.sleep(random.randint(0, 5))
-				ws.send(json.dumps(link_info))
+			crawler.search(ws)
 			ws.close()
 			crawler.printVisited()
 		except:
@@ -284,20 +274,7 @@ def crawl(ws, url, limit, sType, keyword):
 		print("BFS on " + url)
 		crawler = BFS(url, limit, keyword)
 		try:
-			#crawler.search(ws)
-			link_info = {}
-			link_info['url'] = "www.apple.com"
-			link_info['title'] = "title"
-			link_info['depth'] = 1
-
-			# send info to visualizer
-			for i in range(0,20):
-				link_info = {}
-				link_info['url'] = "www.apple.com"
-				link_info['title'] = "title"
-				link_info['depth'] = i
-				time.sleep(random.randint(0, 5))
-				ws.send(json.dumps(link_info))
+			crawler.search(ws)
 			ws.close()
 			crawler.printVisited()
 		except:
