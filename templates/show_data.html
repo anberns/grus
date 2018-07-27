@@ -319,12 +319,17 @@
 
 				ws.onopen = function() {
 					console.log("Socket Connected");
-				}
+				};
+
+				ws.onerror = function() {
+					console.log("Socket Error: " + event.code);
+				};
 
 				ws.onclose = function(event) {
 					console.log("Socket Closed: " + event.reason);
+					console.log("Close Code: " + event.code);
 					//setTimeout(reconnect(hostname), 1000);
-				}
+				};
 			}
 
 			function reconnect(hostname) {
