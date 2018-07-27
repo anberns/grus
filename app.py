@@ -70,10 +70,10 @@ def launch():
 def startCrawl(ws):
 	global userId, url, limit, sType, keyword
 	userId = session['userId']
-	url = session['url'] 
-	limit = session['limit'] 
-	sType = session['sType'] 
-	keyword = session['keyword'] 
+	url = "apple.com" #session['url'] 
+	limit = 6 #session['limit'] 
+	sType = "dfs" #session['sType'] 
+	keyword = None #session['keyword'] 
 
 	#adding tracing statement
 	print("Value before crawl: userID=", userId, " url=", url, " limit=", limit, " sType=", 
