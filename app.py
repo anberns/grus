@@ -1,5 +1,6 @@
 import os
 import time
+import random
 import uuid
 import json
 import sys
@@ -76,15 +77,22 @@ def startCrawl(ws):
 	keyword = session['keyword'] 
 
 	#adding tracing statement
-	print("Value before crawl: userID=", userId, " url=", url, " limit=", limit, " sType=", 
-		  sType, "keyword=", keyword)
+	#print("Value before crawl: userID=", userId, " url=", url, " limit=", limit, " sType=", 
+	#	  sType, "keyword=", keyword)
 
-	crawlData = json.dumps(crawler.crawl(ws, url, int(limit), sType, keyword))
-
+	#crawlData = json.dumps(crawler.crawl(ws, url, int(limit), sType, keyword))
+	for i in range(0,20):
+		link_info = {}
+		link_info['url'] = "www.apple.com"
+		link_info['title'] = "title"
+		link_info['depth'] = i
+		time.sleep(random.randint(0, 5))
+		ws.send(json.dumps(link_info))
+	ws.close()
 	#store search in database
-	mongo = PyMongo(app)
-	test = mongo.db.test #access test collection
-	postid = test.insert({'userId' : userId, 'url': url, 'limit': limit, 'sType' : sType, 'keyword' : keyword, 'path' : crawlData})
+	#mongo = PyMongo(app)
+	#test = mongo.db.test #access test collection
+	#postid = test.insert({'userId' : userId, 'url': url, 'limit': limit, 'sType' : sType, 'keyword' : keyword, 'path' : crawlData})
 
 
 @app.route('/previous', methods=['POST'])

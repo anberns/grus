@@ -320,7 +320,6 @@
 
 				ws.onopen = function() {
 					console.log("Socket Connected");
-					sleep(5000);
 				};
 
 				ws.onerror = function() {
@@ -337,9 +336,6 @@
 			function reconnect(hostname) {
 				console.log("Reconnecting....");
 				create_socket(hostname);
-			}
-			function sleep (time) {
-  				return new Promise((resolve) => setTimeout(resolve, time));
 			}
 
 		}
