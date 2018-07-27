@@ -63,6 +63,7 @@ def launch():
 	#adding tracing statement
 	print("Value Before Fork: userID=", userId, " url=", url, " limit=", limit, " sType=", sType, "keyword=", keyword)
 
+	time.sleep(1)
 	return render_template('show_data.html', data=None, url=url, keyword=keyword, type=sType)
 
 
@@ -70,10 +71,10 @@ def launch():
 def startCrawl(ws):
 	global userId, url, limit, sType, keyword
 	userId = session['userId']
-	url = "http://www.apple.com" #session['url'] 
-	limit = 6 #session['limit'] 
-	sType = "dfs" #session['sType'] 
-	keyword = None #session['keyword'] 
+	url = session['url'] 
+	limit = session['limit'] 
+	sType = session['sType'] 
+	keyword = session['keyword'] 
 
 	#adding tracing statement
 	print("Value before crawl: userID=", userId, " url=", url, " limit=", limit, " sType=", 
