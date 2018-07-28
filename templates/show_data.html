@@ -158,12 +158,11 @@
 		 *
 		 * @param {*} json_data Json data from the server
 		 */
-		function parse_data(json_data) {
+		function parse_data(site) {
 			var old_sites = d3.selectAll('circle').data(),
 				old_links = d3.selectAll('line').data();
 
-			var site = JSON.parse(json_data),
-				old_site = old_sites.find(el => el.url == site.url);
+			var old_site = old_sites.find(el => el.url == site.url);
 
 			site.visited = true;
 
@@ -356,8 +355,9 @@
 		// Use that as the source for data
 		var data = {{data|tojson}};
 		if (data) {
-			for (var prop in data) {
-				parse_data(data[prop]);
+			var parsed_data = JSON.parse(data);
+			for (var prop in parsed_data) {
+				parse_data(parsed_data[prop]);
 			}
 		} else {
 
@@ -371,7 +371,7 @@
 				var ws = new WebSocket(hostname);
 
 				ws.onmessage = function(event) {
-					parse_data(event.data);
+					parse_data(JSON.parse(event.data));
 				};
 
 				ws.onopen = function() {
