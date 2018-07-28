@@ -251,14 +251,16 @@
 
 			// Update nodes
 			path_node = path_node.data(data.nodes.filter(el => el.visited), d => d.url)
-				.attr("r", 5);
+				.attr("fill", d => d.found ? "#33AA66" : "#222")
+				.attr("r", d => d.found ? 8 : 5);
 
 			// Delete removed sites
 			path_node.exit().remove();
 
 			// Add any new sites
 			path_node = path_node.enter().append("circle")
-				.attr("r", 5)
+				.attr("fill", d => d.found ? "#33AA66" : "#222")
+				.attr("r", d => d.found ? 8 : 5)
 				.call(d3.drag()
 					.on("start", drag_started)
 					.on("drag", dragged)

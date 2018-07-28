@@ -26,7 +26,7 @@
 							<small class="text-muted">{{ "Breadth" if crawl.sType == "bfs" else "Depth" }} First Search - {{crawl.limit}}</small>
 						</div>
 						{% if crawl.keyword %}
-						<span class={{ "text-success" if crawl.success else "text-muted" }}>{{crawl.keyword}}</span>
+						<span class={{ "text-success" if crawl.found else "text-muted" }}>{{crawl.keyword}}</span>
 						{% endif %}
 					</li>
 					{% endfor %} {% else %}

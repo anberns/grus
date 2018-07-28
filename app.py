@@ -73,10 +73,11 @@ def startCrawl(ws):
 		  sType, "keyword=", keyword)
 
 	crawlData = json.dumps(crawler.crawl(ws, url, int(limit), sType, keyword))
+	found = any([link['found'] for link in crawlData.itervalues())
 
 	#store search in database
 	test = mongo.db.test #access test collection
-	postid = test.insert({'userId' : userId, 'url': url, 'limit': limit, 'sType' : sType, 'keyword' : keyword, 'path' : crawlData})
+	postid = test.insert({'userId' : userId, 'url': url, 'limit': limit, 'sType' : sType, 'keyword' : keyword, 'path' : crawlData, 'found' : found})
 
 
 @app.route('/previous', methods=['POST'])

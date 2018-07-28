@@ -136,6 +136,11 @@ class BFS(Spider):
 					link_info['depth'] = depth
 					link_info['parent'] = myParent
 
+					if (self.keyword != None) and soup.find_all(string=re.compile(r'\b%s\b' % self.keyword, re.IGNORECASE)):
+							keywordFound = True
+							link_info['found'] = True
+							print("FOUND KEYWORD: ", self.keyword)
+
 					self.visited[currentURL] = link_info
 
 					# send info to visualizer
@@ -149,9 +154,6 @@ class BFS(Spider):
 						parentinfo['parent'] = currentURL
 						self.URL_list.put(parentinfo)
 
-				if (self.keyword != None) and soup.find_all(string=re.compile(r'\b%s\b' % self.keyword, re.IGNORECASE)):
-						keywordFound = True
-						print("FOUND KEYWORD: ", self.keyword)
 
 
 class DFS(Spider):
@@ -217,14 +219,10 @@ class DFS(Spider):
 				link_info['links'] = self.URL_list.copy()
 				link_info['parent'] = myParent
 
-				self.visited[currentURL] = link_info
-
-				# send info to visualizer
-				ws.send(json.dumps(link_info))
-
 				#checks if keyword found to stop the search
 				if (self.keyword != None) and soup.find_all(string=re.compile(r'\b%s\b' % self.keyword, re.IGNORECASE)):
 						keywordFound = True
+						link_info['found'] = True
 						print("FOUND KEYWORD: ", self.keyword)
 
 				else: #sets up for next iteration
@@ -233,6 +231,12 @@ class DFS(Spider):
 					myParent = currentURL
 					currentURL = nextLink
 					depth += 1
+
+				self.visited[currentURL] = link_info
+
+				# send info to visualizer
+				ws.send(json.dumps(link_info))
+
 			else:	#finds another connection from the current list
 				self.removeLink(nextLink)
 				currentURL = self.nextConnection()
