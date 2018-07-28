@@ -73,7 +73,7 @@ def startCrawl(ws):
 		  sType, "keyword=", keyword)
 
 	crawlData = json.dumps(crawler.crawl(ws, url, int(limit), sType, keyword))
-	found = any([link['found'] for link in crawlData.itervalues())
+	found = any(link['found'] for link in crawlData.itervalues())
 
 	#store search in database
 	test = mongo.db.test #access test collection
