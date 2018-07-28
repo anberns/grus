@@ -44,7 +44,7 @@
 		}
 
 		.path_link line {
-			stroke-width: 3;
+			stroke-width: 2;
 			stroke: #222;
 			marker-end: url(#in_path);
 		}
@@ -174,7 +174,6 @@
 			} else {
 				old_sites.push(site);
 			}
-			console.log(old_sites.find(el => el.url == site.url));
 
 			// Add a link for a site we visited
 			if (site.parent) {
@@ -357,9 +356,9 @@
 		// Use that as the source for data
 		var data = {{data|tojson}};
 		if (data) {
-			console.log("Data sent with response, displaying static data");
-			console.log(data);
-			parse_data(data);
+			for (var prop in data) {
+				parse_data(data[prop]);
+			}
 		} else {
 
 			// Set up the location of the host websocket
