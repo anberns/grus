@@ -49,10 +49,6 @@
 			marker-end: url(#in_path);
 		}
 
-		circle {
-			fill: #ccc;
-		}
-
 	</style>
 </head>
 
@@ -217,6 +213,7 @@
 
 			// Update nodes
 			node = node.data(data.nodes.filter(el => !el.visited), d => d.url)
+				.attr("fill", "#ccc")
 				.attr("r", 3);
 
 			// Delete removed sites
@@ -224,6 +221,7 @@
 
 			// Add any new sites
 			node = node.enter().append("circle")
+				.attr("fill", "#ccc")
 				.attr("r", 3)
 				.call(d3.drag()
 					.on("start", drag_started)
