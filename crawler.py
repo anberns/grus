@@ -135,6 +135,7 @@ class BFS(Spider):
 					link_info['links'] = self.findConnections(currentURL, soup)
 					link_info['depth'] = depth
 					link_info['parent'] = myParent
+					link_info['found'] = False
 
 					if (self.keyword != None) and soup.find_all(string=re.compile(r'\b%s\b' % self.keyword, re.IGNORECASE)):
 							keywordFound = True
@@ -218,6 +219,7 @@ class DFS(Spider):
 				self.findConnections(currentURL, soup)
 				link_info['links'] = self.URL_list.copy()
 				link_info['parent'] = myParent
+				link_info['found'] = False
 
 				#checks if keyword found to stop the search
 				if (self.keyword != None) and soup.find_all(string=re.compile(r'\b%s\b' % self.keyword, re.IGNORECASE)):
