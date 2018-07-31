@@ -5,7 +5,6 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 	<link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap.min.css') }}">
-	<link rel="stylesheet" href="{{ url_for('static', filename='css/ui.css') }}">
 </head>
 
 <body class="bg-light">
@@ -24,10 +23,10 @@
 					<li class="list-group-item d-flex justify-content-between lh-condensed">
 						<div id={{crawl._id}} onclick="submitPrev(this.id);">
 							<h6 class="my-0">{{crawl.url}}</h6>
-							<small class="text-muted">{{ "Breadth" if crawl.type == "bfs" else "Depth" }} First Search - {{crawl.limit}}</small>
+							<small class="text-muted">{{ "Breadth" if crawl.sType == "bfs" else "Depth" }} First Search - {{crawl.limit}}</small>
 						</div>
 						{% if crawl.keyword %}
-						<span class={{ "text-success" if crawl.success else "text-muted" }}>{{crawl.keyword}}</span>
+						<span class={{ "text-success" if crawl.found else "text-muted" }}>{{crawl.keyword}}</span>
 						{% endif %}
 					</li>
 					{% endfor %} {% else %}

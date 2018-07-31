@@ -31,11 +31,24 @@
 		text {
 			font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
 			text-anchor: middle;
-			font-size: 12px;
+			font-size: 10px;
 			font-weight: bolder;
 			fill: black;
 			text-shadow: 0px 0px 2px white;
 		}
+
+		line {
+			stroke-width: 1;
+			stroke: #ccc;
+			marker-end: url(#out_of_path);
+		}
+
+		.path_link line {
+			stroke-width: 2;
+			stroke: #222;
+			marker-end: url(#in_path);
+		}
+
 	</style>
 </head>
 
@@ -55,9 +68,9 @@
 		</footer>
 	</div>
 
-
 	<script src="{{ url_for('static', filename='vendor/jquery.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='vendor/d3.min.js') }}"></script>
+	<script src="https://rawgit.com/joewalnes/reconnecting-websocket/master/reconnecting-websocket.min.js"></script>
 	<script>
 		var margin = {
 			top: 10,
@@ -68,7 +81,6 @@
 
 		var width = 425 - margin.left - margin.right;
 		var height = 625 - margin.top - margin.bottom;
-		var num_nodes;
 		var old_nodes;
 
 
@@ -78,13 +90,16 @@
 			.attr('width', width + margin.left + margin.right)
 			.attr('height', height + margin.top + margin.bottom)
 			.call(responsivefy)
+			.call(d3.zoom().on("zoom", function () {
+				svg.attr("transform", d3.event.transform)
+			 }))
 			.append('g')
 			.attr('transform', `translate(${margin.left}, ${margin.top})`);
 
 		// Create the force simulation that governs the forces on the nodes
 		var simulation = d3.forceSimulation()
 			.force("link", d3.forceLink().id(d => d.url))
-			.force("charge", d3.forceManyBody())
+			.force("charge", d3.forceManyBody().distanceMax(250))
 			.force("center", d3.forceCenter(width / 2, height / 2))
 			.force("collide", d3.forceCollide(d => d.visited ? 20 : 0))
 			.on("tick", ticked);
@@ -99,11 +114,11 @@
 			.attr("refY", 0)
 			.attr("markerWidth", d => d == "in_path" ? 4 : 0)
 			.attr("markerHeight", d => d == "in_path" ? 4 : 0)
-			.attr('fill', "#333")
+			.attr('fill', "#222")
 			.attr("orient", "auto")
 			.append("svg:path")
 			.attr("d", "M0,-5L10,0L0,5");
-
+		
 		// A selection of all of the visual representations of the links
 		var link = svg.append("g")
 			.attr("class", "links")
@@ -114,6 +129,16 @@
 			.attr("class", "nodes")
 			.selectAll("circle");
 
+		// A selection of all of the visual representations of the links in the path
+		var path_link = svg.append("g")
+			.attr("class", "path_link")
+			.selectAll("line");
+
+		// A selection of all of the visual representations of the sites in the path
+		var path_node = svg.append("g")
+			.attr("class", "path_node")
+			.selectAll("circle");
+
 		// A selection of all of the visual representations of the site names
 		var title = svg.append("g")
 			.attr("class", "titles")
@@ -121,100 +146,83 @@
 
 
 		/**
-			* Reformat data from the server to fit the format of the visualization
-			*
-			* @param {*} json_data Json data from the server
-			*/
-		function parse_data(json_data) {
-			var data_obj = JSON.parse(json_data),
-				sites = Object.keys(data_obj).map(key => data_obj[key]),
-				links = [];
+		 * Reformat data from the server to fit the format of the visualization
+		 *
+		 * @param {*} json_data Json data from the server
+		 */
+		function parse_data(site) {
+			var old_sites = d3.selectAll('circle').data(),
+				old_links = d3.selectAll('line').data();
 
-			// Set the number of colored sites we will have
-			num_nodes = sites.length;
+			var old_site = old_sites.find(el => el.url == site.url);
 
-			// Create the set of links for the visualization to use
-			sites.forEach(site => {
-				// Because forEach works with a copy of the original, site can only be
-				// a site we have visited. Mark it as such
-				site.visited = true;
+			site.visited = true;
 
-				// Add a link for a site we visited
-				if (site.parent) {
-					links.push({
-						source: site.parent,
-						target: site.url,
-						in_path: true
+			if (old_site) {
+				for (var prop in site) {
+					old_site[prop] = site[prop];
+				}
+			} else {
+				old_sites.push(site);
+			}
+
+			// Add a link for a site we visited
+			if (site.parent) {
+				old_links.find(el => el.source.url == site.parent &&
+					el.target.url == site.url).in_path = true;
+			}
+
+			// Add links to ones found on pages
+			site.links.forEach(href => {
+				if (old_sites.findIndex(el => el.url == href) == -1) {
+					// Add a new site to our list of sites
+					old_sites.push({
+						url: href,
+						x: old_site ? old_site.x : width / 2,
+						y: old_site ? old_site.y : height / 2
 					});
 				}
-
-				// Add links to ones found on pages
-				site.links.forEach(href => {
-					if (sites.findIndex(el => el.url == href) == -1) {
-						// Add a new site to our list of sites
-						sites.push({ url: href });
-					}
-					links.push({
-						source: site.url,
-						target: href,
-						in_path: false
-					});
+				old_links.push({
+					source: site.url,
+					target: href,
+					in_path: false
 				});
 			});
 
-			// Get the current nodes in the visualization to preserve positions
-			var old_nodes = d3.selectAll('circle').data();
-			sites.forEach(site => {
-				var old_site = old_nodes.find(el => el.url == site.url);
-				if (old_site) {
-					site.x = old_site.x;
-					site.y = old_site.y;
-					site.vx = old_site.vx;
-					site.vy = old_site.vy;
-				}
-			});
-
 			update({
-				nodes: sites,
-				links: links
+				nodes: old_sites,
+				links: old_links
 			});
 		}
 		/**
-			* Sets the data used for the visualization
-			*
-			* @param {*} data Object containing the nodes and links to use for the viz
-			*/
+		 * Sets the data used for the visualization
+		 *
+		 * @param {*} data Object containing the nodes and links to use for the viz
+		 */
 		function update(data) {
 
 			// Update links
-			link = link.data(data.links, d => d.source.url + "-" + d.target.url)
-				.attr("stroke-width", d => d.in_path ? 2 : 1)
-				.attr("stroke", d => d.in_path ? "#333" : "#666")
-				.attr('marker-end', d => d.in_path ? 'url(#in_path)' : 'url(#out_of_path)');
+			link = link.data(data.links.filter(el => !el.in_path), d => d.source.url + "-" + d.target.url);
 
 			// Delete removed links
 			link.exit().remove();
 
 			// Add any new links
-			link = link.enter().append("line")
-				.attr("stroke", d => d.in_path ? "#333" : "#666")
-				.attr("stroke-width", d => d.in_path ? 2 : 1)
-				.attr('marker-end', d => d.in_path ? 'url(#in_path)' : 'url(#out_of_path)')
-				.merge(link);
+			link = link.enter().append("line").merge(link);
 
 
 			// Update nodes
-			node = node.data(data.nodes, d => d.url)
-				.attr("r", d => d.visited ? 5 : 3)
-				.attr("fill", (d, i) => color(d.visited, i));
+			node = node.data(data.nodes.filter(el => !el.visited), d => d.url)
+				.attr("fill", "#ccc")
+				.attr("r", 3);
 
 			// Delete removed sites
 			node.exit().remove();
 
 			// Add any new sites
 			node = node.enter().append("circle")
-				.attr("fill", (d, i) => color(d.visited, i))
-				.attr("r", d => d.visited ? 5 : 3)
+				.attr("fill", "#ccc")
+				.attr("r", 3)
 				.call(d3.drag()
 					.on("start", drag_started)
 					.on("drag", dragged)
@@ -225,16 +233,48 @@
 			node.append("title")
 				.text(d => d.url);
 
+			// Update links
+			path_link = path_link.data(data.links.filter(el => el.in_path), d => d.source.url + "-" + d.target.url);
+
+			// Delete removed links
+			path_link.exit().remove();
+
+			// Add any new links
+			path_link = path_link.enter().append("line").merge(path_link);
+
+
+			// Update nodes
+			path_node = path_node.data(data.nodes.filter(el => el.visited), d => d.url)
+				.attr("fill", d => d.found ? "#33AA66" : "#222")
+				.attr("r", d => d.found ? 8 : 5);
+
+			// Delete removed sites
+			path_node.exit().remove();
+
+			// Add any new sites
+			path_node = path_node.enter().append("circle")
+				.attr("fill", d => d.found ? "#33AA66" : "#222")
+				.attr("r", d => d.found ? 8 : 5)
+				.call(d3.drag()
+					.on("start", drag_started)
+					.on("drag", dragged)
+					.on("end", drag_ended))
+				.merge(path_node);
+
+			// Show URL on hover
+			path_node.append("title")
+				.text(d => d.url);
+
 			// Update titles
-			title = title.data(data.nodes, d => d.url)
-				.text(d => d.title || "");
+			title = title.data(data.nodes.filter(el => el.visited), d => d.url)
+				.text(d => d.title);
 
 			// Delete removed sites
 			title.exit().remove();
 
 			// Add any new sites
 			title = title.enter().append("text")
-				.text(d => d.title || "")
+				.text(d => d.title)
 				.call(d3.drag()
 					.on("start", drag_started)
 					.on("drag", dragged)
@@ -248,17 +288,7 @@
 			// Set the nodes and links for the visualization
 			simulation.nodes(data.nodes);
 			simulation.force("link").links(data.links);
-		}
-
-		function color(was_visited, i) {
-			var h = 0,
-				s = 0,
-				l = 55;
-			if (was_visited) {
-				h = (360 / (num_nodes) * i);
-				s = 55;
-			}
-			return "hsl(" + h + ", " + s + "%, " + l + "%)";
+			simulation.alpha(0.3).restart();
 		}
 
 		function ticked() {
@@ -268,6 +298,14 @@
 				.attr("y2", d => d.target.y);
 
 			node.attr("cx", d => d.x)
+				.attr("cy", d => d.y);
+
+			path_link.attr("x1", d => d.source.x)
+				.attr("y1", d => d.source.y)
+				.attr("x2", d => d.target.x)
+				.attr("y2", d => d.target.y);
+
+			path_node.attr("cx", d => d.x)
 				.attr("cy", d => d.y);
 
 			title.attr("x", d => d.x)
@@ -309,12 +347,51 @@
 			}
 		}
 
+		// If there is a data property sent in the response from the server,
+		// Use that as the source for data
 		var data = {{data|tojson}};
-		parse_data(data);
+		if (data) {
+			var parsed_data = JSON.parse(data);
+			for (var prop in parsed_data) {
+				parse_data(parsed_data[prop]);
+			}
+		} else {
+
+			// Set up the location of the host websocket
+			var scheme = window.location.protocol == 'https:' ? 'wss://' : 'ws://';
+			var host = scheme + location.host + "/crawl";
+			create_socket(host);
+
+			// Start up the client websocket
+			function create_socket(hostname) {
+				var ws = new WebSocket(hostname);
+
+				ws.onmessage = function(event) {
+					parse_data(JSON.parse(event.data));
+				};
+
+				ws.onopen = function() {
+					console.log("Socket Connected");
+				};
+
+				ws.onerror = function() {
+					console.log("Socket Error: " + event.code);
+				};
+
+				ws.onclose = function(event) {
+					console.log("Socket Closed: " + event.reason);
+					console.log("Close Code: " + event.code);
+					//setTimeout(reconnect(hostname), 1000);
+				};
+			}
+
+			function reconnect(hostname) {
+				console.log("Reconnecting....");
+				create_socket(hostname);
+			}
+
+		}
 	</script>
-</body>
-
-
-</body>
+	</body>
 
 </html>

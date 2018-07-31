@@ -6,16 +6,13 @@
 
 # References:
 #	https://www.digitalocean.com/community/tutorials/how-to-scrape-web-pages-with-beautiful-soup-and-python-3
-
-#	SELENIUM: changed from requests because it wasn't handling pages made with React
-#	https://medium.com/@pyzzled/running-headless-chrome-with-selenium-in-python-3f42d1f5ff1d
 #	BEAUTIFUL SOUP: used to parse the page for data (urls)
 #	http://www.pythonforbeginners.com/beautifulsoup/beautifulsoup-4-python
 #	https://beautiful-soup-4.readthedocs.io/en/latest/
 #	VALIDATORS: used to validate the urls found
 #	http://validators.readthedocs.io/en/latest/#
 
-#	Queue module: Thinking ahead...states "especially useful in 
+#	Queue module: Thinking ahead...states "especially useful in
 #	threaded programming when information must be exchanged safely between multiple threads"
 
 
@@ -34,16 +31,7 @@ import sys
 import time
 
 class Spider(object):
-	name = "findLinks"
-
-	'''def __init__(self, *args, **kwargs):
-		super(Spider, self).__init__(*args, **kwargs)
-
-		self.start_urls = [kwargs.get('url')]
-		#self.limit = kwargs.get('limit')
-		#self.keyword = kwargs.get('keyword')
-
-	'''
+	
 	def __init__(self, URL, limit, keyword=None):
 		self.start = URL
 		self.limit = limit
@@ -95,7 +83,7 @@ class BFS(Spider):
 		for link in soup.find_all('a', href=True):
 			url = link['href']
 
-			#handles relative URLs - by looking for links lacking http and 
+			#handles relative URLs - by looking for links lacking http and
 			#joining these to the base URL to form an absolute URL
 			if not url.startswith('http') and not url.startswith('#'):
 				url = urljoin(base, url)
@@ -110,7 +98,7 @@ class BFS(Spider):
 
 		return connections
 
-	def search(self):
+	def search(self, ws):
 		#holds url and depth for each parent in queue before being processed
 		parentinfo = {
 			'url': self.start,
@@ -128,7 +116,7 @@ class BFS(Spider):
 
 			parent = self.URL_list.get()
 			currentURL = parent.get('url')
-			depth = parent.get('depth')	
+			depth = parent.get('depth')
 			myParent = parent.get('parent')
 			currentURL.rstrip('/')
 
@@ -147,7 +135,17 @@ class BFS(Spider):
 					link_info['links'] = self.findConnections(currentURL, soup)
 					link_info['depth'] = depth
 					link_info['parent'] = myParent
+					link_info['found'] = False
+
+					if (self.keyword != None) and soup.find_all(string=re.compile(r'\b%s\b' % self.keyword, re.IGNORECASE)):
+							keywordFound = True
+							link_info['found'] = True
+							print("FOUND KEYWORD: ", self.keyword)
+
 					self.visited[currentURL] = link_info
+
+					# send info to visualizer
+					ws.send(json.dumps(link_info))
 
 					#all children must be put into the queue as URL_list for next iteration
 					for link in link_info['links']:
@@ -157,11 +155,8 @@ class BFS(Spider):
 						parentinfo['parent'] = currentURL
 						self.URL_list.put(parentinfo)
 
-				if (self.keyword != None) and soup.find_all(string=re.compile(r'\b%s\b' % self.keyword, re.IGNORECASE)):
-						keywordFound = True
-						print("FOUND KEYWORD: ", self.keyword)
 
-			
+
 class DFS(Spider):
 
 	def __init__ (self, URL, limit, keyword=None):
@@ -173,7 +168,7 @@ class DFS(Spider):
 		for link in soup.find_all('a', href=True):
 			url = link['href']
 
-			#handles relative URLs - by looking for links lacking http and 
+			#handles relative URLs - by looking for links lacking http and
 			#joining these to the base URL to form an absolute URL
 			if not url.startswith('http') and not url.startswith('#'):
 				url = urljoin(base, url)
@@ -187,7 +182,7 @@ class DFS(Spider):
 				self.URL_list.append(url)
 
 	def nextConnection(self):
-		if self.URL_list:		
+		if self.URL_list:
 			random = randrange(0, len(self.URL_list))
 			#returns random url from page to follow
 			return self.URL_list[random]
@@ -198,7 +193,7 @@ class DFS(Spider):
 		if url in self.URL_list:
 			self.URL_list.remove(url)
 
-	def search(self):
+	def search(self, ws):
 		#while the number of visited pages is less than the user-set limit
 		currentURL = self.start
 		depth = 0
@@ -215,7 +210,7 @@ class DFS(Spider):
 			if soup is not None:  #parsePage returns None if page returns bad response code
 				#clears the URL_list for next page
 				self.URL_list.clear()
-				
+
 				#enter information on page
 				link_info = {}
 				link_info['url'] = currentURL
@@ -224,29 +219,34 @@ class DFS(Spider):
 				self.findConnections(currentURL, soup)
 				link_info['links'] = self.URL_list.copy()
 				link_info['parent'] = myParent
-
-				#copies info into visited lsit
-				self.visited[currentURL] = link_info
+				link_info['found'] = False
 
 				#checks if keyword found to stop the search
 				if (self.keyword != None) and soup.find_all(string=re.compile(r'\b%s\b' % self.keyword, re.IGNORECASE)):
 						keywordFound = True
+						link_info['found'] = True
 						print("FOUND KEYWORD: ", self.keyword)
 
 				else: #sets up for next iteration
 				#gets random next link from list of children
 					nextLink = self.nextConnection()
-					myParent = currentURL 				
+					myParent = currentURL
 					currentURL = nextLink
 					depth += 1
+
+				self.visited[currentURL] = link_info
+
+				# send info to visualizer
+				ws.send(json.dumps(link_info))
+
 			else:	#finds another connection from the current list
 				self.removeLink(nextLink)
 				currentURL = self.nextConnection()
 
 
 
-#testing functions 
-def crawl(url, limit, sType, keyword):
+#testing functions
+def crawl(ws, url, limit, sType, keyword):
 
 	'''
 	chrome_bin = os.environ.get('GOOGLE_CHROME_SHIM', None)
@@ -258,7 +258,7 @@ def crawl(url, limit, sType, keyword):
 	browser = webdriver.Chrome(chrome_options=options, executable_path="./chromedriver")
 	'''
 
-	'''	
+	'''
 	#LOCAL
 	chrome_options = Options(Proxy = null)
 	chrome_options.add_argument("--headless")
@@ -267,22 +267,26 @@ def crawl(url, limit, sType, keyword):
 
 	if sType == "dfs":
 		random.seed(time.time())
-		print("DFS on " + url) 
+		print("DFS on " + url)
 		crawler = DFS(url, limit, keyword)
 		try:
-			crawler.search()
+			crawler.search(ws)
+			ws.close(1000, "Closing Connection Normally")
 			crawler.printVisited()
 		except:
 			print(sys.exc_info()[0])
-	
+			ws.close(1000, "Closing Connection Due to Crawler Error")
+
 	else:
 		print("BFS on " + url)
 		crawler = BFS(url, limit, keyword)
 		try:
-			crawler.search()
+			crawler.search(ws)
+			ws.close(1000, "Closing Connection Normally")
 			crawler.printVisited()
 		except:
 			print(sys.exc_info()[0])
+			ws.close(1000, "Closing Connection Due to Crawler Error")
 
 	return crawler.getVisited()
 
