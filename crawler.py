@@ -68,17 +68,6 @@ class Spider(object):
 	def getVisited(self):
 		return self.visited
 
-	def validateURL(self, URL):
-		if not validators(URL):
-			return False;
-		else:
-			response = requests.get(URL, timeout=5)
-			if (response.status_code == requests.codes.ok):
-				return True;
-			else:
-				return False;
-
-
 
 
 class BFS(Spider):
@@ -104,7 +93,7 @@ class BFS(Spider):
 			url = removeQuery[0]
 
 			#verifies link found is valid url and not a duplicate
-			if self.validateURL(url) and url not in connections:
+			if validators.url(url) and url not in connections:
 				connections.append(url)
 
 		return connections
@@ -189,7 +178,7 @@ class DFS(Spider):
 			url = removeQuery[0]
 
 			#verifies link found is valid url and not a duplicate
-			if self.validateURL(url) and url not in self.URL_list and url not in self.visited:
+			if validators.url(url) and url not in self.URL_list and url not in self.visited:
 				self.URL_list.append(url)
 
 	def nextConnection(self):
