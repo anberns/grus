@@ -61,6 +61,11 @@
 		</div>
 
 		<div id="chart"></div>
+		<div id="new" class="text-center">
+			<form action = "/" method="GET">
+				<button class="btn btn-primary btn-lg" type="submit">New Crawl</button>
+			</form>
+		</div>
 
 		<footer class="pt-5 text-muted text-center text-small">
 			<p class="mb-1">CS467 Capstone - Team Grus</p>
@@ -70,7 +75,6 @@
 
 	<script src="{{ url_for('static', filename='vendor/jquery.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='vendor/d3.min.js') }}"></script>
-	<script src="https://rawgit.com/joewalnes/reconnecting-websocket/master/reconnecting-websocket.min.js"></script>
 	<script>
 		var margin = {
 			top: 10,
