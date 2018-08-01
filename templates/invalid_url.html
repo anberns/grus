@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+	<body>
+
+        <h1>Alas, an error there be...</h1>
+		<p>Please check your starting url and try again.</p>
+		{% if code %}
+		Error code: {{ code }}
+		{% else %}
+		DNS error
+		{% endif %}
+
+
+	</body>
+    
+</html>

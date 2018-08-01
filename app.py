@@ -4,6 +4,7 @@ import uuid
 import json
 import sys
 import crawler
+import requests
 from socket import error as SocketError
 import errno
 from flask import Flask, request, render_template, make_response, session
@@ -46,6 +47,15 @@ def launch():
 	limit = request.form['limit']
 	sType = request.form['type']
 	keyword = request.form['keyword']
+
+	#validate url domain and path
+	try:
+		valid = requests.get(url)
+		if valid.status_code != requests.codes.ok:
+			return render_template('invalid_url.html', code = valid.status_code)
+	except:
+		return render_template('invalid_url.html')
+
 
 	session['userId']= userId
 	session['url'] = url
