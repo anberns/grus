@@ -93,14 +93,14 @@ class Spider(object):
 		title = soup.title
 		if title is not None:
 			return title.get_text()
-
+'''
 	def printVisited(self):
 		print("Visited List: ")
 		print((json.dumps(self.visited, indent=4)))
 
 	def getVisited(self):
 		return self.visited
-
+'''
 
 
 class BFS(Spider):
@@ -131,7 +131,7 @@ class BFS(Spider):
 
 		return connections
 
-	def search(self, ws):
+	def search(self, ws, postid, database):
 		#holds url and depth for each parent in queue before being processed
 		parentinfo = {
 			'url': self.start,
@@ -174,11 +174,31 @@ class BFS(Spider):
 							keywordFound = True
 							link_info['found'] = True
 							print("FOUND KEYWORD: ", self.keyword)
+							try: 
+								database.update_one(
+									{'_id': postid},
+									{ 
+										'$set': { 'found': True}
+									}
+								)
+							except Exception as e:
+								print(str(e))
 
-					self.visited[currentURL] = link_info
+					self.visited[currentURL] = True
 
 					# send info to visualizer
 					ws.send(json.dumps(link_info))
+
+					#store in database
+					try: 
+						database.update_one(
+							{'_id': postid},
+							{ 
+								'$push': { 'path': json.dumps(link_info)}
+							}
+						)
+					except Exception as e:
+						print(str(e))
 
 					#all children must be put into the queue as URL_list for next iteration
 					for link in link_info['links']:
@@ -235,7 +255,7 @@ class DFS(Spider):
 		if url in self.URL_list:
 			self.URL_list.remove(url)
 
-	def search(self, ws):
+	def search(self, ws, postid, database):
 		#while the number of visited pages is less than the user-set limit
 		currentURL = self.start
 		depth = 0
@@ -272,17 +292,37 @@ class DFS(Spider):
 						keywordFound = True
 						link_info['found'] = True
 						print("FOUND KEYWORD: ", self.keyword)
+						try: 
+							database.update_one(
+								{'_id': postid},
+								{ 
+									'$set': { 'found': True}
+								}
+							)
+						except Exception as e:
+							print(str(e))
 					
 					nextLink = self.nextConnection()
 					myParent = currentURL
 					currentURL = nextLink
 					depth += 1
 
-					self.visited[currentURL] = link_info
+					self.visited[currentURL] = True
 					
 					# send info to visualizer
 					ws.send(json.dumps(link_info))
-					
+
+					#store in database
+					try: 
+						database.update_one(
+							{'_id': postid},
+							{ 
+								'$push': { 'path': json.dumps(link_info)}
+							}
+						)
+					except Exception as e:
+						print(str(e))
+
 				else:	#finds another connection from the current list
 					self.removeLink(nextLink)
 					currentURL = self.nextConnection()
@@ -293,7 +333,7 @@ class DFS(Spider):
 
 
 #testing functions
-def crawl(ws, url, limit, sType, keyword):
+def crawl(ws, url, limit, sType, keyword, postid, database):
 
 	'''
 	chrome_bin = os.environ.get('GOOGLE_CHROME_SHIM', None)
@@ -317,9 +357,8 @@ def crawl(ws, url, limit, sType, keyword):
 		print("DFS on " + url)
 		crawler = DFS(url, limit, keyword)
 		try:
-			crawler.search(ws)
+			crawler.search(ws, postid, database)
 			ws.close(1000, "Closing Connection Normally")
-			crawler.printVisited()
 		except:
 			print(sys.exc_info()[0])
 			ws.close(1000, "Closing Connection Due to Crawler Error")
@@ -328,15 +367,10 @@ def crawl(ws, url, limit, sType, keyword):
 		print("BFS on " + url)
 		crawler = BFS(url, limit, keyword)
 		try:
-			crawler.search(ws)
+			crawler.search(ws, postid, database)
 			ws.close(1000, "Closing Connection Normally")
-			crawler.printVisited()
 		except:
 			print(sys.exc_info()[0])
 			ws.close(1000, "Closing Connection Due to Crawler Error")
 
-	return crawler.getVisited()
-
-
-#crawl("https://www.apple.com", 15, "dfs", None)
 

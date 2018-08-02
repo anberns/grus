@@ -15,7 +15,7 @@ from flask_sockets import Sockets
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 
-app.config["MONGO_URI"] = "mongodb://heroku_l49w3pqw:corelnjkhviq52q7gsmalc504c@ds139331.mlab.com:39331/heroku_l49w3pqw"
+app.config["MONGO_URI"] = "mongodb://heroku_zlgnt8hx:8qj45t037p6on1oj0r472epmhq@ds233551.mlab.com:33551/heroku_zlgnt8hx"
 mongo = PyMongo(app)
 sockets = Sockets(app)
 
@@ -77,19 +77,15 @@ def startCrawl(ws):
 	limit = session['limit'] 
 	sType = session['sType'] 
 	keyword = session['keyword'] 
+	path = []
+	found = False
 
-	#adding tracing statement
-	print("Value before crawl: userID=", userId, " url=", url, " limit=", limit, " sType=", 
-		  sType, "keyword=", keyword)
+	database = mongo.db.test #access test collection
+	postid = database.insert({'userId' : userId, 'url': url, 'limit': limit, 'sType' : sType, 'keyword' : keyword, 'path': path, 'found': found})
 
-	crawlData = crawler.crawl(ws, url, int(limit), sType, keyword)
-	found = any(link['found'] for link in crawlData.values())
-
-	#store search in database
-	test = mongo.db.test #access test collection
-	postid = test.insert({'userId' : userId, 'url': url, 'limit': limit, 'sType' : sType, 'keyword' : keyword, 'path' : json.dumps(crawlData), 'found' : found})
-
-
+	#call crawler, passing socket and db info
+	crawler.crawl(ws, url, int(limit), sType, keyword, postid, database)
+	
 @app.route('/previous', methods=['POST'])
 def getPreviousCrawl():
 
