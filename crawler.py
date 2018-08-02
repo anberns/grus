@@ -17,6 +17,7 @@
 
 
 from urllib.parse import urljoin
+from urllib.parse import urlparse
 from bs4 import BeautifulSoup
 import requests
 import random
@@ -29,6 +30,7 @@ import os
 import re
 import sys
 import time
+import urllib.robotparser
 
 class Spider(object):
 	
@@ -40,21 +42,52 @@ class Spider(object):
 		else:
 			self.keyword = None
 		self.visited = collections.defaultdict(dict)
+		self.rp = urllib.robotparser.RobotFileParser()
 
+	def checkRbTXT(self, URL):
+		print("Processing: ", URL)
+		parsed_uri = urlparse(URL)
+		base = '{uri.scheme}://{uri.netloc}/'.format(uri=parsed_uri)
+		#print("Base = ", base)
+		rbtxt = urljoin(base,'robots.txt')
+		#print("Robots.txt link: ", rbtxt)
+		self.rp.set_url(urljoin(base,'robots.txt'))
+		try:
+			self.rp.read()
+			return self.rp.can_fetch("*", URL)
+		except:
+			return True
+
+	def checkMedia(self, URL):
+		#print("Checking for media...")
+		toIgnore = ['mp4', 'mp3', 'mov', 'flv', 'wmv', 'avi', 'png', 'gif', 'jpg', 'bmp']
+		for ending in toIgnore:
+			if URL.endswith(ending):
+				return False
+		return True
+
+	
 	def parsePage(self, URL):
-		#fetches web page
-		response = requests.get(URL, timeout=5)
-
-		#checks status code against code lookup object
-		if (response.status_code == requests.codes.ok):
+		#print("Parsing: ", URL)
+		try:
+			response = requests.get(URL, timeout=5)
+			response.raise_for_status()
+		except requests.exceptions.HTTPError as e:
+			print("Error in retrieving URL", e)
+		except requests.exceptions.Timeout:
+			print("Error in retrieving URL due to Timeout")
+		except requests.exceptions.TooManyRedirects:
+			print("Error in retrieving URL due to redirects")
+		except requests.exceptions.RequestException as e:
+			print("Error in retrieving URL:", e)
+			return None
+		else:
 			myPage = response.content
 			soup = BeautifulSoup(myPage, 'lxml')
-			return soup
+			print("Getting Soup")
+			return soup				
 
-		else:
-			print("Error loading page: ", URL, " ", response.status_code)
-			return None
-
+		
 	def findPageTitle(self, soup):
 		#finds the first title tag
 		title = soup.title
@@ -149,12 +182,14 @@ class BFS(Spider):
 
 					#all children must be put into the queue as URL_list for next iteration
 					for link in link_info['links']:
-						parentinfo = {}
-						parentinfo['url'] = link
-						parentinfo['depth'] = depth + 1
-						parentinfo['parent'] = currentURL
-						self.URL_list.put(parentinfo)
-
+						#if not self.checkRbTXT(link):
+						#	print(link, " not included in crawl per robot.txt'
+						if self.checkMedia(link):
+							parentinfo = {}
+							parentinfo['url'] = link
+							parentinfo['depth'] = depth + 1
+							parentinfo['parent'] = currentURL
+							self.URL_list.put(parentinfo)
 
 
 class DFS(Spider):
@@ -184,9 +219,16 @@ class DFS(Spider):
 	def nextConnection(self):
 		if self.URL_list:
 			random = randrange(0, len(self.URL_list))
-			#returns random url from page to follow
 			return self.URL_list[random]
+			#returns random url from page to follow
+			#if self.checkRbTXT(self.URL_list[random]):
+			#	print("Returning next available site to crawl")					
+			#	return self.URL_list[random]
+			#else:
+			#	print(self.URL_list[random], " not included in crawl per robots.txt")
+			#	return "Excluded"
 		else:
+			print("No more links to crawl")
 			return None
 
 	def removeLink(self, url):
@@ -199,50 +241,55 @@ class DFS(Spider):
 		depth = 0
 		myParent = None
 		keywordFound = False
-		nextLink = " "
 
-		while (len(self.visited) < self.limit+1) and not keywordFound and nextLink != None:
-			currentURL.rstrip('/')
+		#while limit has not been reached, keyword hasn't been found and still urls available to crawl
+		while (len(self.visited) < self.limit+1) and not keywordFound and currentURL != None:
+			
+			if self.checkMedia(currentURL):
 
-			#parse that page
-			soup = self.parsePage(currentURL)
+				currentURL.rstrip('/')
 
-			if soup is not None:  #parsePage returns None if page returns bad response code
-				#clears the URL_list for next page
-				self.URL_list.clear()
+				#parse that page
+				soup = self.parsePage(currentURL)
 
-				#enter information on page
-				link_info = {}
-				link_info['url'] = currentURL
-				link_info['title'] = self.findPageTitle(soup)
-				link_info['depth'] = depth
-				self.findConnections(currentURL, soup)
-				link_info['links'] = self.URL_list.copy()
-				link_info['parent'] = myParent
-				link_info['found'] = False
+				if soup is not None:  #parsePage returns None if page returns bad response code
+					#clears the URL_list for next page
+					self.URL_list.clear()
 
-				#checks if keyword found to stop the search
-				if (self.keyword != None) and soup.find_all(string=re.compile(r'\b%s\b' % self.keyword, re.IGNORECASE)):
+					#enter information on page
+					link_info = {}
+					link_info['url'] = currentURL
+					link_info['title'] = self.findPageTitle(soup)
+					link_info['depth'] = depth
+					self.findConnections(currentURL, soup)
+					link_info['links'] = self.URL_list.copy()
+					link_info['parent'] = myParent
+					link_info['found'] = False
+
+
+					#checks if keyword found to stop the search
+					if (self.keyword != None) and soup.find_all(string=re.compile(r'\b%s\b' % self.keyword, re.IGNORECASE)):
 						keywordFound = True
 						link_info['found'] = True
 						print("FOUND KEYWORD: ", self.keyword)
-
-				else: #sets up for next iteration
-				#gets random next link from list of children
+					
 					nextLink = self.nextConnection()
 					myParent = currentURL
 					currentURL = nextLink
 					depth += 1
 
-				self.visited[currentURL] = link_info
+					self.visited[currentURL] = link_info
+					
+					# send info to visualizer
+					ws.send(json.dumps(link_info))
+					
+				else:	#finds another connection from the current list
+					self.removeLink(nextLink)
+					currentURL = self.nextConnection()
 
-				# send info to visualizer
-				ws.send(json.dumps(link_info))
-
-			else:	#finds another connection from the current list
+			else:
 				self.removeLink(nextLink)
 				currentURL = self.nextConnection()
-
 
 
 #testing functions
