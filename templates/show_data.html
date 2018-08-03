@@ -49,24 +49,40 @@
 			marker-end: url(#in_path);
 		}
 
+		@keyframes blink {
+			0% {
+				opacity: .1;
+			}
+			20% {
+				opacity: 1;
+			}
+			100% {
+				opacity: .2;
+			}
+		}
+
+		.waiting span {
+			animation-name: blink;
+			animation-duration: 1.4s;
+			animation-iteration-count: infinite;
+			animation-fill-mode: both;
+		}
+		.waiting span:nth-child(2) {
+			animation-delay: .2s;
+		}
+		.waiting span:nth-child(3) {
+			animation-delay: .4s;
+		}
+
 	</style>
 </head>
 
 <body class="bg-light">
 
 	<div id="main">
-		<div class="py-5 text-center">
-			<h1>Graphical Web Crawler - Grus</h1>
-			<p class="lead">Results of a {{ "breadth" if type == "bfs" else "depth" }} first search on {{url}}{% if keyword %} for the word "{{keyword}}"{% endif %}</p>
-		</div>
-
+		<div id="header" class="py-5 text-center"></div>
 		<div id="chart"></div>
-		<div id="new" class="text-center">
-			<form action = "/" method="GET">
-				<button class="btn btn-primary btn-lg" type="submit">New Crawl</button>
-			</form>
-		</div>
-
+		<div id="newCrawl" class="text-center"></div>
 		<footer class="pt-5 text-muted text-center text-small">
 			<p class="mb-1">CS467 Capstone - Team Grus</p>
 			<a href="https://github.com/anberns/grus">Source</a>
@@ -76,6 +92,94 @@
 	<script src="{{ url_for('static', filename='vendor/jquery.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='vendor/d3.min.js') }}"></script>
 	<script>
+
+		// set global variables from view
+		window.appConfig = {
+			id: '{{ docId }}',
+			sType: '{{ "breadth" if type == "bfs" else "depth" }}',
+			url: '{{ url }}',
+			keyword: '{{ keyword }}'
+		}
+
+		// load inital header for visualizer page
+		function loadInitialHeader() {
+			var newH = document.createElement("h1");
+			newH.textContent = "Graphical Web Crawler - Grus";
+			newH.id = "initialHeader";
+			document.getElementById("header").appendChild(newH);
+			newH = document.createElement("h5");
+			newH.className = "waiting";
+			newH.id = "initialText";
+			newH.textContent = "Performing a " + window.appConfig.sType + "-first search on '" + window.appConfig.url + "'";
+			if (window.appConfig.keyword) {
+				newH.textContent += (" for the word '" + window.appConfig.keyword + "'");
+			}
+			document.getElementById("header").appendChild(newH);
+			var newSpan;
+			for (i = 0; i < 3; i++) {
+				newSpan = document.createElement("SPAN");
+				newSpan.textContent = ".";
+				document.getElementById("initialText").appendChild(newSpan);
+			}
+		}
+
+		// header to display previously stored crawl 
+		function loadPrevHeader() {
+			var timeStamp = new Date(parseInt(window.appConfig.id.substring(0,8), 16) * 1000);
+			var newH = document.createElement("h1");
+			newH.textContent = "Graphical Web Crawler - Grus";
+			newH.id = "prevHeader";
+			document.getElementById("header").appendChild(newH);
+			var capType = window.appConfig.sType;
+			capType = capType.charAt(0).toUpperCase() + capType.substr(1);
+			newH = document.createElement("h5");
+			newH.id = "prevText";
+			newH.innerHTML = capType + "-first search from '" + window.appConfig.url + "'";
+			if (window.appConfig.keyword) {
+				newH.innerHTML+= (" for the word '" + window.appConfig.keyword + "'");
+			}
+			newH.innerHTML += "<br>" + timeStamp;
+			document.getElementById("header").appendChild(newH);
+		}
+
+		// change header to display end of crawl and elapsed time
+		function updateHeader() {
+			var oldP = document.getElementById("initialText");
+			oldP.remove();
+			var updatedH = document.createElement("h5");
+			updatedH.id = "updatedText";
+			var capType = window.appConfig.sType;
+			capType = capType.charAt(0).toUpperCase() + capType.substr(1);
+			updatedH.textContent = capType + "-first search on '" + window.appConfig.url + "' completed in " + ((window.appConfig.endTime - window.appConfig.startTime) / 1000).toFixed(2) + " seconds";
+			document.getElementById("header").appendChild(updatedH);
+		}
+
+		// store current time in global window variable
+		// argument is 0 for initial, any other number for final
+		function getTime(pos) {
+			var timeNow = new Date();
+			if (pos == 0) {
+				window.appConfig.startTime = timeNow;
+			}
+			else {
+				window.appConfig.endTime = timeNow;
+			}
+		}
+
+		// add new crawl button when crawl done
+		function addNewCrawl() {
+			var newForm = document.createElement("FORM");
+			newForm.id = "newCrawlForm";
+			newForm.action = "/";
+			newForm.method = "GET";
+			document.getElementById("newCrawl").appendChild(newForm);
+			var newButton = document.createElement("BUTTON");
+			newButton.class = "btn btn-primary btn-lg btn-block text-center";
+			newButton.type = "submit";
+			newButton.textContent = "New Crawl";
+			document.getElementById("newCrawlForm").appendChild(newButton);
+		}
+
 		var margin = {
 			top: 10,
 			right: 15,
@@ -182,8 +286,7 @@
 					// Add a new site to our list of sites
 					old_sites.push({
 						url: href,
-						x: old_site ? old_site.x : width / 2,
-						y: old_site ? old_site.y : height / 2
+						x: old_site ? old_site.x : width / 2, y: old_site ? old_site.y : height / 2
 					});
 				}
 				old_links.push({
@@ -355,9 +458,13 @@
 		// Use that as the source for data
 		var data = {{data|tojson}};
 		if (data) {
+			loadPrevHeader();
 			data.forEach(site => parse_data(JSON.parse(site)));
 		} else {
 
+			// load header
+			loadInitialHeader();
+			
 			// Set up the location of the host websocket
 			var scheme = window.location.protocol == 'https:' ? 'wss://' : 'ws://';
 			var host = scheme + location.host + "/crawl";
@@ -372,6 +479,7 @@
 				};
 
 				ws.onopen = function() {
+					getTime(0);
 					console.log("Socket Connected");
 				};
 
@@ -380,6 +488,9 @@
 				};
 
 				ws.onclose = function(event) {
+					getTime(1);
+					updateHeader();
+					addNewCrawl();
 					console.log("Socket Closed: " + event.reason);
 					console.log("Close Code: " + event.code);
 					//setTimeout(reconnect(hostname), 1000);
