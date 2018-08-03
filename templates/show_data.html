@@ -355,8 +355,7 @@
 		// Use that as the source for data
 		var data = {{data|tojson}};
 		if (data) {
-			var sites = JSON.parse(data);
-			sites.forEach(site => parse_data(site));
+			data.forEach(site => parse_data(JSON.parse(site)));
 		} else {
 
 			// Set up the location of the host websocket
