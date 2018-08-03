@@ -83,10 +83,6 @@
 		<div id="header" class="py-5 text-center"></div>
 		<div id="chart"></div>
 		<div id="newCrawl" class="text-center"></div>
-		<footer class="pt-5 text-muted text-center text-small">
-			<p class="mb-1">CS467 Capstone - Team Grus</p>
-			<a href="https://github.com/anberns/grus">Source</a>
-		</footer>
 	</div>
 
 	<script src="{{ url_for('static', filename='vendor/jquery.min.js') }}"></script>
@@ -460,6 +456,7 @@
 		if (data) {
 			loadPrevHeader();
 			data.forEach(site => parse_data(JSON.parse(site)));
+			addNewCrawl();
 		} else {
 
 			// load header
