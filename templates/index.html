@@ -120,6 +120,7 @@
 		function submitPrev(id) {
 			var newForm = document.createElement("form");
 			var newInput = document.createElement("input");
+			newInput.type = "hidden";
 			newForm.action = "/previous";
 			newForm.method = "POST";
 			newInput.value = id;
