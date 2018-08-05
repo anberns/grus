@@ -94,7 +94,8 @@
 			id: '{{ docId }}',
 			sType: '{{ "breadth" if type == "bfs" else "depth" }}',
 			url: '{{ url }}',
-			keyword: '{{ keyword }}'
+			keyword: '{{ keyword }}',
+			found : '{{ found }}'
 		}
 
 		// load inital header for visualizer page
@@ -133,6 +134,11 @@
 			newH.innerHTML = capType + "-first search from '" + window.appConfig.url + "'";
 			if (window.appConfig.keyword) {
 				newH.innerHTML+= (" for the word '" + window.appConfig.keyword + "'");
+				if (window.appConfig.found == 'True') {
+					newH.innerHTML += ", which was found";
+				} else {
+					newH.innerHTML += ", which was not found";
+				}
 			}
 			newH.innerHTML += "<br>" + timeStamp;
 			document.getElementById("header").appendChild(newH);

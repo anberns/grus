@@ -97,7 +97,7 @@ def getPreviousCrawl():
 	#get data from id
 	queryData = test.find_one({'_id' : ObjectId(docId)})
 
-	return render_template('show_data.html', data=queryData['path'], url=queryData['url'], type=queryData['sType'], keyword=queryData['keyword'], docId = docId)
+	return render_template('show_data.html', data=queryData['path'], url=queryData['url'], type=queryData['sType'], keyword=queryData['keyword'], found = queryData['found'], docId = docId)
 
 
 if __name__ == "__main__":
