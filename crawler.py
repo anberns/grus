@@ -42,21 +42,38 @@ class Spider(object):
 		else:
 			self.keyword = None
 		self.visited = collections.defaultdict(dict)
-		self.rp = urllib.robotparser.RobotFileParser()
+		self.rulesDict = {}
+		self.noRules = []
 
 	def checkRbTXT(self, URL):
-		print("Processing: ", URL)
 		parsed_uri = urlparse(URL)
 		base = '{uri.scheme}://{uri.netloc}/'.format(uri=parsed_uri)
-		#print("Base = ", base)
-		rbtxt = urljoin(base,'robots.txt')
-		#print("Robots.txt link: ", rbtxt)
-		self.rp.set_url(urljoin(base,'robots.txt'))
-		try:
-			self.rp.read()
-			return self.rp.can_fetch("*", URL)
-		except:
+
+		if base in self.noRules:
 			return True
+
+		if base not in self.rulesDict:
+			#print("Robots.txt link: ", rbtxt)
+			rules = urllib.robotparser.RobotFileParser()
+			rules.set_url(urljoin(base,'robots.txt'))	
+	
+			try:
+				print("Fetching rules for:", base)
+				rules.read()
+
+			except:
+				print("Cannot fetch rules from:", base)
+				self.noRules.append(base)
+				return True
+			
+			else:
+				self.rulesDict[base] = rules
+		
+		if not self.rulesDict[base].can_fetch("*", URL):
+			print (URL, "was NOT INCLUDED per robots.txt")
+	
+		return self.rulesDict[base].can_fetch("*", URL)
+			
 
 	def checkMedia(self, URL):
 		#print("Checking for media...")
@@ -68,24 +85,30 @@ class Spider(object):
 
 	
 	def parsePage(self, URL):
-		#print("Parsing: ", URL)
 		try:
 			response = requests.get(URL, timeout=5)
 			response.raise_for_status()
-		except requests.exceptions.HTTPError as e:
-			print("Error in retrieving URL", e)
+		except requests.exceptions.HTTPError:
+			print("Error in retrieving URL")
+			return None
+		except requests.exceptions.SSLError:
+			print("Error in SSL certificate")
+			return None
 		except requests.exceptions.Timeout:
 			print("Error in retrieving URL due to Timeout")
+			return None
 		except requests.exceptions.TooManyRedirects:
 			print("Error in retrieving URL due to redirects")
-		except requests.exceptions.RequestException as e:
-			print("Error in retrieving URL:", e)
+			return None
+		except requests.exceptions.RequestException:
+			print("Error in retrieving URL")
 			return None
 		else:
 			myPage = response.content
 			soup = BeautifulSoup(myPage, 'lxml')
 			print("Getting Soup")
-			return soup				
+			return soup
+			
 
 		
 	def findPageTitle(self, soup):
@@ -182,9 +205,7 @@ class BFS(Spider):
 
 					#all children must be put into the queue as URL_list for next iteration
 					for link in link_info['links']:
-						#if not self.checkRbTXT(link):
-						#	print(link, " not included in crawl per robot.txt'
-						if self.checkMedia(link):
+						if self.checkMedia(link) and self.checkRbTXT(link):
 							parentinfo = {}
 							parentinfo['url'] = link
 							parentinfo['depth'] = depth + 1
@@ -219,14 +240,13 @@ class DFS(Spider):
 	def nextConnection(self):
 		if self.URL_list:
 			random = randrange(0, len(self.URL_list))
-			return self.URL_list[random]
+			#return self.URL_list[random]
 			#returns random url from page to follow
-			#if self.checkRbTXT(self.URL_list[random]):
-			#	print("Returning next available site to crawl")					
-			#	return self.URL_list[random]
-			#else:
-			#	print(self.URL_list[random], " not included in crawl per robots.txt")
-			#	return "Excluded"
+			if self.checkRbTXT(self.URL_list[random]):
+				#print("Returning next available site to crawl")					
+				return self.URL_list[random]
+			else:
+				return "Excluded"
 		else:
 			print("No more links to crawl")
 			return None
@@ -244,9 +264,8 @@ class DFS(Spider):
 
 		#while limit has not been reached, keyword hasn't been found and still urls available to crawl
 		while (len(self.visited) < self.limit+1) and not keywordFound and currentURL != None:
-			
-			if self.checkMedia(currentURL):
 
+			if self.checkMedia(currentURL) and currentURL != "Excluded":
 				currentURL.rstrip('/')
 
 				#parse that page
