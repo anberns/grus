@@ -146,7 +146,22 @@
 			updatedH.id = "updatedText";
 			var capType = window.appConfig.sType;
 			capType = capType.charAt(0).toUpperCase() + capType.substr(1);
-			updatedH.textContent = capType + "-first search on '" + window.appConfig.url + "' completed in " + ((window.appConfig.endTime - window.appConfig.startTime) / 1000).toFixed(2) + " seconds";
+			
+			updatedH.innerHTML = capType + "-first search on '" + window.appConfig.url + "'";
+			if (window.appConfig.keyword) {
+				updatedH.innerHTML+= " for the word '" + window.appConfig.keyword + "'";
+			}
+			
+			updatedH.innerHTML += " completed in " + ((window.appConfig.endTime - window.appConfig.startTime) / 1000).toFixed(2) + " seconds";
+			if (window.appConfig.keyword) {
+				updatedH.innerHTML+= "<br>Keyword '" + window.appConfig.keyword + "'";
+				if (window.appConfig.found) {
+					updatedH.innerHTML += " found";
+				} else {
+					updatedH.innerHTML += " not found";
+				}
+			}
+			
 			document.getElementById("header").appendChild(updatedH);
 		}
 
@@ -472,7 +487,12 @@
 				var ws = new WebSocket(hostname);
 
 				ws.onmessage = function(event) {
-					parse_data(JSON.parse(event.data));
+					parsed = JSON.parse(event.data);
+					parse_data(parsed);
+					if (parsed.found) {
+						window.appConfig.found = true;
+					}
+
 				};
 
 				ws.onopen = function() {
