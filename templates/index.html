@@ -54,6 +54,13 @@
 								Website is required.
 							</div>
 						</div>
+						{% with messages = get_flashed_messages() %}
+							{% if messages %}
+								{% for message in messages %}
+									<div style='color:#F44336;' id="error">{{ message }}</div>
+								{% endfor %}
+							{% endif %}
+						{% endwith %}
 					</div>
 
 					<div class="mb-3">
@@ -86,7 +93,7 @@
 							</div>
 						</div>
 					</div>
-					<button class="btn btn-primary btn-lg btn-block" type="submit">Crawl</button>
+					<button class="btn btn-primary btn-lg btn-block" type="submit" onClick="hideError();">Crawl</button>
 				</form>
 			</div>
 		</div>
@@ -97,6 +104,7 @@
 		</footer>
 	</div>
 
+	
 
 	<script src="{{ url_for('static', filename='vendor/jquery.min.js') }}"></script>
 	<script>
@@ -131,6 +139,15 @@
 
 			newForm.submit();
 		}
+		
+		// hides nonexistent url message so blank url message is displayed alone
+		function hideError() {
+			if ($("#error")) {
+				if (!$("#url")[0].checkValidity()) {
+					$("#error").hide();
+				}
+			}
+		};
 	</script>
 </body>
 

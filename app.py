@@ -7,7 +7,7 @@ import crawler
 import requests
 from socket import error as SocketError
 import errno
-from flask import Flask, request, render_template, make_response, session
+from flask import Flask, flash, request, render_template, make_response, session, redirect, url_for
 from flask_pymongo import PyMongo
 from bson.objectid import ObjectId
 from flask_sockets import Sockets
@@ -52,9 +52,11 @@ def launch():
 	try:
 		valid = requests.get(url)
 		if valid.status_code != requests.codes.ok:
-			return render_template('invalid_url.html', code = valid.status_code)
-	except:
-		return render_template('invalid_url.html')
+			flash("'" + url + "' does not exist. Please try again.")
+			return redirect(url_for('index'))
+	except Exception as e:
+		flash("'" + url + "' does not exist. Please try again.")
+		return redirect(url_for('index'))
 
 
 	session['userId']= userId
