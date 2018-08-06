@@ -103,6 +103,8 @@
 		// load inital header for visualizer page
 		function loadInitialHeader() {
 			$("#newCrawl").hide();
+			$("#toggler").hide();
+
 			$("#headerText").addClass("waiting")
 				.text(
 					"Performing a {{ 'breadth' if type == 'bfs' else 'depth' }}-first search on '{{ url }}'{% if keyword %} for the word '{{keyword}}'{% endif %}"
@@ -122,6 +124,7 @@
 		// change header to display end of crawl and elapsed time
 		function updateHeader(searchTime, found = false) {
 			$("#newCrawl").show();
+			$("#toggler").show();
 
 			$("#headerText").html(
 				"{{ 'Breadth' if type == 'bfs' else 'Depth' }}-first search on '{{ url }}'{% if keyword %} for the word '{{keyword}}'{% endif %} completed in " +
