@@ -113,7 +113,7 @@ class Spider(object):
 			#print("Getting Soup")
 			return soup
 			
-	def formatURL(self, url, base, url):
+	def formatURL(self, base, url):
 		#handles relative URLs - by looking for links lacking http and
 		#joining these to the base URL to form an absolute URL
 		if not url.startswith('http') and not url.startswith('#'):
@@ -230,7 +230,7 @@ class DFS(Spider):
 		self.URL_list = []
 		super(DFS, self).__init__(URL, limit, keyword)
 
-	def findConnections(self, base, soup):
+	def findConnections(self, base, parent, soup):
 		#find_all looks for all links on the page
 		for link in soup.find_all('a', href=True):
 			url = link['href']
@@ -238,7 +238,7 @@ class DFS(Spider):
 			url = self.formatURL(base, url)
 			
 			#verifies link found is valid url and not a duplicate
-			if validators.url(url) and url not in self.URL_list and url not in self.visited:
+			if validators.url(url) and url not in self.URL_list and url not in self.visited and url != parent:
 				self.URL_list.append(url)
 
 	def nextConnection(self):
@@ -284,7 +284,7 @@ class DFS(Spider):
 					link_info['url'] = currentURL
 					link_info['title'] = self.findPageTitle(soup)
 					link_info['depth'] = depth
-					self.findConnections(currentURL, soup)
+					self.findConnections(currentURL, myParent, soup)
 					link_info['links'] = self.URL_list.copy()
 					link_info['parent'] = myParent
 					link_info['found'] = False
