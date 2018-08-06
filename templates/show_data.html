@@ -39,13 +39,10 @@
 
 		line {
 			stroke-width: 1;
-			stroke: #ccc;
-			marker-end: url(#out_of_path);
 		}
 
 		.path_link line {
 			stroke-width: 2;
-			marker-end: url(#in_path);
 		}
 
 		@keyframes blink {
@@ -190,19 +187,9 @@
 			.on("tick", ticked);
 
 		// Create arrows to show directionality
-		svg.append("svg:defs").selectAll("marker")
-			.data(["in_path", "out_of_path"])
-			.enter().append("svg:marker")
-			.attr("id", String)
-			.attr("viewBox", "0 -5 10 10")
-			.attr("refX", 15)
-			.attr("refY", 0)
-			.attr("markerWidth", d => d == "in_path" ? 4 : 0)
-			.attr("markerHeight", d => d == "in_path" ? 4 : 0)
-			.attr('fill', "#20c997")
-			.attr("orient", "auto")
-			.append("svg:path")
-			.attr("d", "M0,-5L10,0L0,5");
+		var mark = svg.append("svg:defs")
+			.attr("class", "markers")
+			.selectAll("marker");
 
 		// A selection of all of the visual representations of the links
 		var link = svg.append("g")
@@ -235,7 +222,7 @@
 		 *
 		 * @param {*} json_data Json data from the server
 		 */
-		 function parse_data(site) {
+		function parse_data(site) {
 			site.visited = true;
 			if (site.depth > max_depth) max_depth = site.depth;
 
@@ -274,6 +261,7 @@
 				dataset.links.push({
 					source: site.url,
 					target: href,
+					depth: site.depth,
 					in_path: false
 				});
 			});
@@ -302,14 +290,34 @@
 		 */
 		function update(data) {
 
+			// Update the markers
+			d3.selectAll("marker").remove();
+
+			mark.data(["out_of_path"].concat([...Array(max_depth).keys()]))
+				.enter().append("svg:marker")
+				.attr("id", d => "marker_" + d)
+				.attr("viewBox", "0 -5 10 10")
+				.attr("refX", 15)
+				.attr("refY", 0)
+				.attr("markerWidth", d => d == "out_of_path" ? 0 : 4)
+				.attr("markerHeight", d => d == "out_of_path" ? 0 : 4)
+				.attr('fill', d => d == "out_of_path" ? "#000" : color(d))
+				.attr("orient", "auto")
+				.append("svg:path")
+				.attr("d", "M0,-5L10,0L0,5");
+
 			// Update links
-			link = link.data(data.links.filter(el => !el.in_path), d => d.source.url + "-" + d.target.url);
+			link = link.data(data.links.filter(el => !el.in_path), d => d.source.url + "-" + d.target.url)
+				.attr("marker-end", d => "url(#marker_ou_of_path)")
+				.attr("stroke", "#ccc");
 
 			// Delete removed links
 			link.exit().remove();
 
 			// Add any new links
-			link = link.enter().append("line").merge(link);
+			link = link.enter().append("line").merge(link)
+				.attr("marker-end", d => "url(#marker_ou_of_path)")
+				.attr("stroke", "#ccc");
 
 
 			// Update nodes
@@ -337,14 +345,16 @@
 
 			// Update links
 			path_link = path_link.data(data.links.filter(el => el.in_path), d => d.source.url + "-" + d.target.url)
-				.attr("stroke", d => color(d.source.depth));
+				.attr("marker-end", d => "url(#marker_" + d.depth + ")")
+				.attr("stroke", d => color(d.depth));
 
 			// Delete removed links
 			path_link.exit().remove();
 
 			// Add any new links
 			path_link = path_link.enter().append("line")
-				.attr("stroke", d => color(d.source.depth))
+				.attr("stroke", d => color(d.depth))
+				.attr("marker-end", d => "url(#marker_" + d.depth + ")")
 				.merge(path_link);
 
 
