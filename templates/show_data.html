@@ -85,6 +85,14 @@
 			<h1>Graphical Web Crawler - Grus</h1>
 			<p class="lead" id="headerText"></p>
 			<a id="newCrawl" class="btn btn-primary" href="/" role="button">New Crawl</a>
+			<div id="toggler" class="btn-group btn-group-toggle" data-toggle="buttons">
+				<label class="btn btn-info active">
+					<input type="radio" id="hide" autocomplete="off"> Hide Unvisited
+				</label>
+				<label class="btn btn-info">
+					<input type="radio" id="show" autocomplete="off"> Show Unvisited
+				</label>
+			</div>
 		</div>
 		<div id="chart"></div>
 	</div>
@@ -138,6 +146,25 @@
 			links: []
 		};
 		var show_unvisited = false;
+
+		// Toggle the grey nodes
+		$("#toggler :input").click(function() {
+			$("#toggler label").removeClass("active");
+			$(this).parent().addClass("active");
+			if ($(this).attr("id") == "hide" && show_unvisited == true) {
+				show_unvisited = false;
+				update({
+					nodes: dataset.nodes.filter(el => el.visited),
+					links: dataset.links.filter(el => el.in_path)
+				});
+			} else if ($(this).attr("id") == "show" && show_unvisited == false) {
+				show_unvisited = true;
+				update({
+					nodes: dataset.nodes,
+					links: dataset.links
+				});
+			}
+		});
 
 		// Create the svg where the visualization will reside
 		var svg = d3.select('#chart')
@@ -221,8 +248,13 @@
 
 			// Add a link for a site we visited
 			if (site.parent) {
-				dataset.links.find(el => el.source.url == site.parent &&
-					el.target.url == site.url).in_path = true;
+				if (show_unvisited) {
+					dataset.links.find(el => el.source.url == site.parent &&
+						el.target.url == site.url).in_path = true;
+				} else {
+					dataset.links.find(el => el.source == site.parent &&
+						el.target == site.url).in_path = true;
+				}
 			}
 
 			// Add links to ones found on pages
@@ -253,8 +285,8 @@
 			})
 
 			update({
-				nodes: dataset.nodes,
-				links: dataset.links
+				nodes: show_unvisited ? dataset.nodes : dataset.nodes.filter(el => el.visited),
+				links: show_unvisited ? dataset.links : dataset.links.filter(el => el.in_path)
 			});
 		}
 		/**
