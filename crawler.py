@@ -152,8 +152,11 @@ class BFS(Spider):
 			removeQuery = url.split('?')
 			url = removeQuery[0]
 
-			url.rstrip('/')
+			if url.endswith('/'):
+				url = url[:-1]
 			
+			#url.rstrip('/')
+
 			#verifies link found is valid url and not a duplicate and not the same as the parent url
 			if validators.url(url) and url not in connections and url != parent:
 				connections.append(url)
