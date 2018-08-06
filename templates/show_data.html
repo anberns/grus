@@ -45,7 +45,6 @@
 
 		.path_link line {
 			stroke-width: 2;
-			stroke: #20c997;
 			marker-end: url(#in_path);
 		}
 
@@ -149,6 +148,7 @@
 			links: []
 		};
 		var show_unvisited = false;
+		var max_depth = 0;
 
 		// Toggle the grey nodes
 		$("#toggler :input").click(function() {
@@ -237,6 +237,7 @@
 		 */
 		 function parse_data(site) {
 			site.visited = true;
+			if (site.depth > max_depth) max_depth = site.depth;
 
 			var old_site = dataset.nodes.find(el => el.url == site.url);
 
@@ -265,7 +266,9 @@
 				if (dataset.nodes.findIndex(el => el.url == href) == -1) {
 					// Add a new site to our list of sites
 					dataset.nodes.push({
-						url: href
+						url: href,
+						cx: 0,
+						cy: 0
 					});
 				}
 				dataset.links.push({
@@ -333,27 +336,30 @@
 				.text(d => d.url);
 
 			// Update links
-			path_link = path_link.data(data.links.filter(el => el.in_path), d => d.source.url + "-" + d.target.url);
+			path_link = path_link.data(data.links.filter(el => el.in_path), d => d.source.url + "-" + d.target.url)
+				.attr("stroke", d => color(d.source.depth));
 
 			// Delete removed links
 			path_link.exit().remove();
 
 			// Add any new links
-			path_link = path_link.enter().append("line").merge(path_link);
+			path_link = path_link.enter().append("line")
+				.attr("stroke", d => color(d.source.depth))
+				.merge(path_link);
 
 
 			// Update nodes
 			path_node = path_node.data(data.nodes.filter(el => el.visited), d => d.url)
-				.attr("fill", d => d.found ? "#33AA66" : "#20c997")
-				.attr("r", d => d.found ? 8 : 5);
+				.attr("fill", d => color(d.depth))
+				.attr("r", d => d.found ? 10 : 5);
 
 			// Delete removed sites
 			path_node.exit().remove();
 
 			// Add any new sites
 			path_node = path_node.enter().append("circle")
-				.attr("fill", d => d.found ? "#33AA66" : "#20c997")
-				.attr("r", d => d.found ? 8 : 5)
+				.attr("fill", d => color(d.depth))
+				.attr("r", d => d.found ? 10 : 5)
 				.on("click", d => window.open(d.url))
 				.call(d3.drag()
 					.on("start", drag_started)
@@ -390,6 +396,10 @@
 			simulation.nodes(data.nodes);
 			simulation.force("link").links(data.links);
 			simulation.alpha(0.3).restart();
+		}
+
+		function color(depth) {
+			return "hsl(" + (360 / (max_depth + 1) * depth) + ", 55%, 65%)";
 		}
 
 		function ticked() {
