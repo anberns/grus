@@ -249,8 +249,6 @@ class DFS(Spider):
 		if self.URL_list:				#returns random url from page to follow
 			random = randrange(0, len(self.URL_list))
 			return self.URL_list[random]
-			else:
-				return "Excluded"
 		else:
 			print("No more links to crawl")
 			return None
@@ -269,7 +267,7 @@ class DFS(Spider):
 		#while limit has not been reached, keyword hasn't been found and still urls available to crawl
 		while (len(self.visited) < self.limit+1) and not keywordFound and currentURL != None:
 
-			if self.checkMedia(currentURL) and currentURL != "Excluded":
+			if self.checkMedia(currentURL):
 				currentURL.rstrip('/')
 
 				#parse that page
