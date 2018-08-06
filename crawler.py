@@ -85,9 +85,11 @@ class Spider(object):
 
 	
 	def parsePage(self, URL):
-		try:
+		try:  #attempts to load page first
 			response = requests.get(URL, timeout=5)
 			response.raise_for_status()
+
+		#returns None upon any page loading error
 		except requests.exceptions.HTTPError:
 			print("Error in retrieving URL")
 			return None
@@ -103,10 +105,12 @@ class Spider(object):
 		except requests.exceptions.RequestException:
 			print("Error in retrieving URL")
 			return None
+
+		#or returns soup
 		else:
 			myPage = response.content
 			soup = BeautifulSoup(myPage, 'lxml')
-			print("Getting Soup")
+			#print("Getting Soup")
 			return soup
 			
 
@@ -138,6 +142,7 @@ class BFS(Spider):
 		#find_all looks for all links on the page
 		for link in soup.find_all('a', href=True):
 			url = link['href']
+			url.rstrip('/')
 
 			#handles relative URLs - by looking for links lacking http and
 			#joining these to the base URL to form an absolute URL
@@ -223,6 +228,8 @@ class DFS(Spider):
 		#find_all looks for all links on the page
 		for link in soup.find_all('a', href=True):
 			url = link['href']
+			url.rstrip('/')
+
 
 			#handles relative URLs - by looking for links lacking http and
 			#joining these to the base URL to form an absolute URL
@@ -243,7 +250,7 @@ class DFS(Spider):
 			#return self.URL_list[random]
 			#returns random url from page to follow
 			if self.checkRbTXT(self.URL_list[random]):
-				#print("Returning next available site to crawl")					
+				#print("Returning next available site to crawl")
 				return self.URL_list[random]
 			else:
 				return "Excluded"
