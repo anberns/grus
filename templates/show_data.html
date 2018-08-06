@@ -132,8 +132,12 @@
 
 		var width = 425 - margin.left - margin.right;
 		var height = 625 - margin.top - margin.bottom;
-		var old_nodes;
 
+		var dataset = {
+			nodes: [],
+			links: []
+		};
+		var show_unvisited = false;
 
 		// Create the svg where the visualization will reside
 		var svg = d3.select('#chart')
@@ -201,48 +205,56 @@
 		 *
 		 * @param {*} json_data Json data from the server
 		 */
-		function parse_data(site) {
-			var old_sites = d3.selectAll('circle').data(),
-				old_links = d3.selectAll('line').data();
-
-			var old_site = old_sites.find(el => el.url == site.url);
-
+		 function parse_data(site) {
 			site.visited = true;
 
+			var old_site = dataset.nodes.find(el => el.url == site.url);
+
 			if (old_site) {
+				// Update node properties if this site was already found
 				for (var prop in site) {
 					old_site[prop] = site[prop];
 				}
 			} else {
-				old_sites.push(site);
+				dataset.nodes.push(site);
 			}
 
 			// Add a link for a site we visited
 			if (site.parent) {
-				old_links.find(el => el.source.url == site.parent &&
+				dataset.links.find(el => el.source.url == site.parent &&
 					el.target.url == site.url).in_path = true;
 			}
 
 			// Add links to ones found on pages
 			site.links.forEach(href => {
-				if (old_sites.findIndex(el => el.url == href) == -1) {
+				if (dataset.nodes.findIndex(el => el.url == href) == -1) {
 					// Add a new site to our list of sites
-					old_sites.push({
-						url: href,
-						x: old_site ? old_site.x : width / 2,
-						y: old_site ? old_site.y : height / 2
+					dataset.nodes.push({
+						url: href
 					});
 				}
-				old_links.push({
+				dataset.links.push({
 					source: site.url,
 					target: href,
 					in_path: false
 				});
 			});
 
+			// Update the dataset with svg properties
+			old_sites = d3.selectAll('circle').data().forEach(circle => {
+				var dataset_node = dataset.nodes.find(el => el.url == circle.id);
+				if (dataset_node)
+					["cx", "cy"].forEach(prop => dataset_node[prop] = circle[prop]);
+			});
+			old_links = d3.selectAll('line').data().forEach(line => {
+				var dataset_link = dataset.links.find(el => el.source + "-" + el.target == line.id);
+				if (dataset_link)
+					["x1", "y1", "x2", "y2"].forEach(prop => dataset_link[prop] = circle[prop]);
+			})
+
 			update({
-				nodes: old_sites,
-				links: old_links
+				nodes: dataset.nodes,
+				links: dataset.links
 			});
 		}
 		/**
