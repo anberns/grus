@@ -85,36 +85,37 @@ class Spider(object):
 
 	
 	def parsePage(self, URL):
+
 		if not checkRbTXT(URL):
 			return None
+		
+		try:  #attempts to load page first
+			response = requests.get(URL, timeout=5)
+			response.raise_for_status()
+
+		#returns None upon any page loading error
+		except requests.exceptions.HTTPError:
+			print("Error in retrieving URL")
+			return None
+		except requests.exceptions.SSLError:
+			print("Error in SSL certificate")
+			return None
+		except requests.exceptions.Timeout:
+			print("Error in retrieving URL due to Timeout")
+			return None
+		except requests.exceptions.TooManyRedirects:
+			print("Error in retrieving URL due to redirects")
+			return None
+		except requests.exceptions.RequestException:
+			print("Error in retrieving URL")
+			return None
+
+		#or returns soup
 		else:
-			try:  #attempts to load page first
-				response = requests.get(URL, timeout=5)
-				response.raise_for_status()
-
-			#returns None upon any page loading error
-			except requests.exceptions.HTTPError:
-				print("Error in retrieving URL")
-				return None
-			except requests.exceptions.SSLError:
-				print("Error in SSL certificate")
-				return None
-			except requests.exceptions.Timeout:
-				print("Error in retrieving URL due to Timeout")
-				return None
-			except requests.exceptions.TooManyRedirects:
-				print("Error in retrieving URL due to redirects")
-				return None
-			except requests.exceptions.RequestException:
-				print("Error in retrieving URL")
-				return None
-
-			#or returns soup
-			else:
-				myPage = response.content
-				soup = BeautifulSoup(myPage, 'lxml')
-				#print("Getting Soup")
-				return soup
+			myPage = response.content
+			soup = BeautifulSoup(myPage, 'lxml')
+			#print("Getting Soup")
+			return soup
 			
 	def formatURL(self, url, base):
 		#handles relative URLs - by looking for links lacking http and
