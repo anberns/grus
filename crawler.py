@@ -85,35 +85,38 @@ class Spider(object):
 
 	
 	def parsePage(self, URL):
-		try:  #attempts to load page first
-			response = requests.get(URL, timeout=5)
-			response.raise_for_status()
-
-		#returns None upon any page loading error
-		except requests.exceptions.HTTPError:
-			print("Error in retrieving URL")
+		if !checkRbTXT(URL):
 			return None
-		except requests.exceptions.SSLError:
-			print("Error in SSL certificate")
-			return None
-		except requests.exceptions.Timeout:
-			print("Error in retrieving URL due to Timeout")
-			return None
-		except requests.exceptions.TooManyRedirects:
-			print("Error in retrieving URL due to redirects")
-			return None
-		except requests.exceptions.RequestException:
-			print("Error in retrieving URL")
-			return None
-
-		#or returns soup
 		else:
-			myPage = response.content
-			soup = BeautifulSoup(myPage, 'lxml')
-			#print("Getting Soup")
-			return soup
+			try:  #attempts to load page first
+				response = requests.get(URL, timeout=5)
+				response.raise_for_status()
+
+			#returns None upon any page loading error
+			except requests.exceptions.HTTPError:
+				print("Error in retrieving URL")
+				return None
+			except requests.exceptions.SSLError:
+				print("Error in SSL certificate")
+				return None
+			except requests.exceptions.Timeout:
+				print("Error in retrieving URL due to Timeout")
+				return None
+			except requests.exceptions.TooManyRedirects:
+				print("Error in retrieving URL due to redirects")
+				return None
+			except requests.exceptions.RequestException:
+				print("Error in retrieving URL")
+				return None
+
+			#or returns soup
+			else:
+				myPage = response.content
+				soup = BeautifulSoup(myPage, 'lxml')
+				#print("Getting Soup")
+				return soup
 			
-	def formatURL(self, base, url):
+	def formatURL(self, url, base):
 		#handles relative URLs - by looking for links lacking http and
 		#joining these to the base URL to form an absolute URL
 		if not url.startswith('http') and not url.startswith('#'):
@@ -216,7 +219,7 @@ class BFS(Spider):
 
 					#all children must be put into the queue as URL_list for next iteration
 					for link in link_info['links']:
-						if self.checkMedia(link) and self.checkRbTXT(link) and link not in self.visited:
+						if self.checkMedia(link) and link not in self.visited:
 							parentinfo = {}
 							parentinfo['url'] = link
 							parentinfo['depth'] = depth + 1
@@ -242,13 +245,9 @@ class DFS(Spider):
 				self.URL_list.append(url)
 
 	def nextConnection(self):
-		if self.URL_list:
+		if self.URL_list:				#returns random url from page to follow
 			random = randrange(0, len(self.URL_list))
-			#return self.URL_list[random]
-			#returns random url from page to follow
-			if self.checkRbTXT(self.URL_list[random]):
-				#print("Returning next available site to crawl")
-				return self.URL_list[random]
+			return self.URL_list[random]
 			else:
 				return "Excluded"
 		else:
