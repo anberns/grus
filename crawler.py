@@ -142,7 +142,6 @@ class BFS(Spider):
 		#find_all looks for all links on the page
 		for link in soup.find_all('a', href=True):
 			url = link['href']
-			url.rstrip('/')
 
 			#handles relative URLs - by looking for links lacking http and
 			#joining these to the base URL to form an absolute URL
@@ -153,6 +152,7 @@ class BFS(Spider):
 			removeQuery = url.split('?')
 			url = removeQuery[0]
 
+			url.rstrip('/')
 			#verifies link found is valid url and not a duplicate
 			if validators.url(url) and url not in connections:
 				connections.append(url)
@@ -228,8 +228,6 @@ class DFS(Spider):
 		#find_all looks for all links on the page
 		for link in soup.find_all('a', href=True):
 			url = link['href']
-			url.rstrip('/')
-
 
 			#handles relative URLs - by looking for links lacking http and
 			#joining these to the base URL to form an absolute URL
@@ -240,6 +238,7 @@ class DFS(Spider):
 			removeQuery = url.split('?')
 			url = removeQuery[0]
 
+			url.rstrip('/')
 			#verifies link found is valid url and not a duplicate
 			if validators.url(url) and url not in self.URL_list and url not in self.visited:
 				self.URL_list.append(url)
