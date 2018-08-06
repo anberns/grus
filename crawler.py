@@ -113,8 +113,22 @@ class Spider(object):
 			#print("Getting Soup")
 			return soup
 			
+	def formatURL(self, url):
+		#handles relative URLs - by looking for links lacking http and
+		#joining these to the base URL to form an absolute URL
+		if not url.startswith('http') and not url.startswith('#'):
+			url = urljoin(base, url)
 
+		#removes query params so as not to have repeated websites
+		removeQuery = url.split('?')
+		url = removeQuery[0]
 		
+		#strips off trailing forward slash
+		if url.endswith('/'):
+			url = url[:-1]
+
+		return url
+
 	def findPageTitle(self, soup):
 		#finds the first title tag
 		title = soup.title
@@ -143,20 +157,8 @@ class BFS(Spider):
 		for link in soup.find_all('a', href=True):
 			url = link['href']
 
-			#handles relative URLs - by looking for links lacking http and
-			#joining these to the base URL to form an absolute URL
-			if not url.startswith('http') and not url.startswith('#'):
-				url = urljoin(base, url)
-
-			#removes query params so as not to have repeated websites
-			removeQuery = url.split('?')
-			url = removeQuery[0]
-
-			if url.endswith('/'):
-				url = url[:-1]
+			self.formatURL(url)
 			
-			#url.rstrip('/')
-
 			#verifies link found is valid url and not a duplicate and not the same as the parent url
 			if validators.url(url) and url not in connections and url != parent:
 				connections.append(url)
@@ -233,16 +235,8 @@ class DFS(Spider):
 		for link in soup.find_all('a', href=True):
 			url = link['href']
 
-			#handles relative URLs - by looking for links lacking http and
-			#joining these to the base URL to form an absolute URL
-			if not url.startswith('http') and not url.startswith('#'):
-				url = urljoin(base, url)
-
-			#removes query params so as not to have repeated websites
-			removeQuery = url.split('?')
-			url = removeQuery[0]
-
-			url.rstrip('/')
+			url = self.formatURL(url)
+			
 			#verifies link found is valid url and not a duplicate
 			if validators.url(url) and url not in self.URL_list and url not in self.visited:
 				self.URL_list.append(url)
