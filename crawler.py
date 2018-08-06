@@ -210,7 +210,7 @@ class BFS(Spider):
 
 					#all children must be put into the queue as URL_list for next iteration
 					for link in link_info['links']:
-						if self.checkMedia(link) and self.checkRbTXT(link):
+						if self.checkMedia(link) and self.checkRbTXT(link) and link not in self.visited:
 							parentinfo = {}
 							parentinfo['url'] = link
 							parentinfo['depth'] = depth + 1
