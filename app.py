@@ -29,7 +29,7 @@ def index():
 		# get stored data
 		test = mongo.db.test  # access test collection
 		storedCrawls = test.find({'userId': userId})
-		return render_template('index.html', crawls=storedCrawls)
+		return render_template('index.html', crawls=storedCrawls[::-1])
 	else:
 		userId = str(uuid.uuid4())
 		response = make_response(render_template('index.html'))
@@ -73,10 +73,10 @@ def launch():
 def startCrawl(ws):
 	global userId, url, limit, sType, keyword
 	userId = session['userId']
-	url = session['url'] 
-	limit = session['limit'] 
-	sType = session['sType'] 
-	keyword = session['keyword'] 
+	url = session['url']
+	limit = session['limit']
+	sType = session['sType']
+	keyword = session['keyword']
 	path = []
 	found = False
 
@@ -85,7 +85,7 @@ def startCrawl(ws):
 
 	#call crawler, passing socket and db info
 	crawler.crawl(ws, url, int(limit), sType, keyword, postid, database)
-	
+
 @app.route('/previous', methods=['POST'])
 def getPreviousCrawl():
 
