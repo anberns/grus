@@ -137,7 +137,7 @@ class BFS(Spider):
 		#inherit Spider constructor
 		super(BFS, self).__init__(URL, limit, keyword)
 
-	def findConnections(self, base, soup):
+	def findConnections(self, base, parent, soup):
 		connections= []
 		#find_all looks for all links on the page
 		for link in soup.find_all('a', href=True):
@@ -153,8 +153,9 @@ class BFS(Spider):
 			url = removeQuery[0]
 
 			url.rstrip('/')
-			#verifies link found is valid url and not a duplicate
-			if validators.url(url) and url not in connections:
+			
+			#verifies link found is valid url and not a duplicate and not the same as the parent url
+			if validators.url(url) and url not in connections and url != parent:
 				connections.append(url)
 
 		return connections
@@ -193,7 +194,7 @@ class BFS(Spider):
 					link_info = {}
 					link_info['url'] = currentURL
 					link_info['title'] = self.findPageTitle(soup)
-					link_info['links'] = self.findConnections(currentURL, soup)
+					link_info['links'] = self.findConnections(currentURL, myParent, soup)
 					link_info['depth'] = depth
 					link_info['parent'] = myParent
 					link_info['found'] = False
