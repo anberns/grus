@@ -85,9 +85,11 @@ class Spider(object):
 
 	
 	def parsePage(self, URL):
-		try:
+		try:  #attempts to load page first
 			response = requests.get(URL, timeout=5)
 			response.raise_for_status()
+
+		#returns None upon any page loading error
 		except requests.exceptions.HTTPError:
 			print("Error in retrieving URL")
 			return None
@@ -103,14 +105,30 @@ class Spider(object):
 		except requests.exceptions.RequestException:
 			print("Error in retrieving URL")
 			return None
+
+		#or returns soup
 		else:
 			myPage = response.content
 			soup = BeautifulSoup(myPage, 'lxml')
-			print("Getting Soup")
+			#print("Getting Soup")
 			return soup
 			
+	def formatURL(self, base, url):
+		#handles relative URLs - by looking for links lacking http and
+		#joining these to the base URL to form an absolute URL
+		if not url.startswith('http') and not url.startswith('#'):
+			url = urljoin(base, url)
 
+		#removes query params so as not to have repeated websites
+		removeQuery = url.split('?')
+		url = removeQuery[0]
 		
+		#strips off trailing forward slash
+		if url.endswith('/'):
+			url = url[:-1]
+
+		return url
+
 	def findPageTitle(self, soup):
 		#finds the first title tag
 		title = soup.title
@@ -133,23 +151,16 @@ class BFS(Spider):
 		#inherit Spider constructor
 		super(BFS, self).__init__(URL, limit, keyword)
 
-	def findConnections(self, base, soup):
+	def findConnections(self, base, parent, soup):
 		connections= []
 		#find_all looks for all links on the page
 		for link in soup.find_all('a', href=True):
 			url = link['href']
 
-			#handles relative URLs - by looking for links lacking http and
-			#joining these to the base URL to form an absolute URL
-			if not url.startswith('http') and not url.startswith('#'):
-				url = urljoin(base, url)
+			url = self.formatURL(base, url)
 
-			#removes query params so as not to have repeated websites
-			removeQuery = url.split('?')
-			url = removeQuery[0]
-
-			#verifies link found is valid url and not a duplicate
-			if validators.url(url) and url not in connections:
+			#verifies link found is valid url and not a duplicate and not the same as the parent url
+			if validators.url(url) and url not in connections and url != parent:
 				connections.append(url)
 
 		return connections
@@ -188,7 +199,7 @@ class BFS(Spider):
 					link_info = {}
 					link_info['url'] = currentURL
 					link_info['title'] = self.findPageTitle(soup)
-					link_info['links'] = self.findConnections(currentURL, soup)
+					link_info['links'] = self.findConnections(currentURL, myParent, soup)
 					link_info['depth'] = depth
 					link_info['parent'] = myParent
 					link_info['found'] = False
@@ -225,7 +236,7 @@ class BFS(Spider):
 
 					#all children must be put into the queue as URL_list for next iteration
 					for link in link_info['links']:
-						if self.checkMedia(link) and self.checkRbTXT(link):
+						if self.checkMedia(link) and self.checkRbTXT(link) and link not in self.visited:
 							parentinfo = {}
 							parentinfo['url'] = link
 							parentinfo['depth'] = depth + 1
@@ -239,22 +250,15 @@ class DFS(Spider):
 		self.URL_list = []
 		super(DFS, self).__init__(URL, limit, keyword)
 
-	def findConnections(self, base, soup):
+	def findConnections(self, base, parent, soup):
 		#find_all looks for all links on the page
 		for link in soup.find_all('a', href=True):
 			url = link['href']
 
-			#handles relative URLs - by looking for links lacking http and
-			#joining these to the base URL to form an absolute URL
-			if not url.startswith('http') and not url.startswith('#'):
-				url = urljoin(base, url)
-
-			#removes query params so as not to have repeated websites
-			removeQuery = url.split('?')
-			url = removeQuery[0]
-
+			url = self.formatURL(base, url)
+			
 			#verifies link found is valid url and not a duplicate
-			if validators.url(url) and url not in self.URL_list and url not in self.visited:
+			if validators.url(url) and url not in self.URL_list and url not in self.visited and url != parent:
 				self.URL_list.append(url)
 
 	def nextConnection(self):
@@ -263,7 +267,7 @@ class DFS(Spider):
 			#return self.URL_list[random]
 			#returns random url from page to follow
 			if self.checkRbTXT(self.URL_list[random]):
-				#print("Returning next available site to crawl")					
+				#print("Returning next available site to crawl")
 				return self.URL_list[random]
 			else:
 				return "Excluded"
@@ -300,7 +304,7 @@ class DFS(Spider):
 					link_info['url'] = currentURL
 					link_info['title'] = self.findPageTitle(soup)
 					link_info['depth'] = depth
-					self.findConnections(currentURL, soup)
+					self.findConnections(currentURL, myParent, soup)
 					link_info['links'] = self.URL_list.copy()
 					link_info['parent'] = myParent
 					link_info['found'] = False
