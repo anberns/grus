@@ -85,7 +85,7 @@ class Spider(object):
 
 	
 	def parsePage(self, URL):
-		if !checkRbTXT(URL):
+		if not checkRbTXT(URL):
 			return None
 		else:
 			try:  #attempts to load page first
