@@ -85,9 +85,6 @@ class Spider(object):
 
 	
 	def parsePage(self, URL):
-
-		if not checkRbTXT(URL):
-			return None
 		
 		try:  #attempts to load page first
 			response = requests.get(URL, timeout=5)
@@ -117,7 +114,7 @@ class Spider(object):
 			#print("Getting Soup")
 			return soup
 			
-	def formatURL(self, url, base):
+	def formatURL(self, base, url):
 		#handles relative URLs - by looking for links lacking http and
 		#joining these to the base URL to form an absolute URL
 		if not url.startswith('http') and not url.startswith('#'):
@@ -220,7 +217,7 @@ class BFS(Spider):
 
 					#all children must be put into the queue as URL_list for next iteration
 					for link in link_info['links']:
-						if self.checkMedia(link) and link not in self.visited:
+						if self.checkMedia(link) and link not in self.visited and self.checkRbTXT(link):
 							parentinfo = {}
 							parentinfo['url'] = link
 							parentinfo['depth'] = depth + 1
@@ -248,7 +245,10 @@ class DFS(Spider):
 	def nextConnection(self):
 		if self.URL_list:				#returns random url from page to follow
 			random = randrange(0, len(self.URL_list))
-			return self.URL_list[random]
+			if self.checkRbTXT(self.URL_list[random]): #check crawlable
+				return self.URL_list[random]
+			else:
+				return "Excluded"
 		else:
 			print("No more links to crawl")
 			return None
@@ -267,7 +267,7 @@ class DFS(Spider):
 		#while limit has not been reached, keyword hasn't been found and still urls available to crawl
 		while (len(self.visited) < self.limit+1) and not keywordFound and currentURL != None:
 
-			if self.checkMedia(currentURL):
+			if self.checkMedia(currentURL) and currentURL != "Excluded":
 				currentURL.rstrip('/')
 
 				#parse that page
