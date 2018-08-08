@@ -80,6 +80,7 @@
 		<div id="header" class="py-1 text-center">
 			<h1>Graphical Web Crawler - Grus</h1>
 			<p class="lead" id="headerText"></p>
+			<div id="stop" class = "btn btn-primary" role="button" onclick="stopCrawl()">Stop Crawl</div>
 			<a id="newCrawl" class="btn btn-primary" href="/" role="button">New Crawl</a>
 			<div id="toggler" class="btn-group btn-group-toggle" data-toggle="buttons">
 				<label class="btn btn-info active">
@@ -96,6 +97,10 @@
 	<script src="{{ url_for('static', filename='vendor/jquery.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='vendor/d3.min.js') }}"></script>
 	<script>
+
+		// global websocket
+		var ws;
+
 		// load inital header for visualizer page
 		function loadInitialHeader() {
 			$("#newCrawl").hide();
@@ -110,23 +115,30 @@
 
 		// header to display previously stored crawl
 		function loadPrevHeader() {
+			$("#stop").hide();
 			var timeStamp = new Date(parseInt("{{ docId }}".substring(0, 8), 16) * 1000);
 
 			$("#headerText").html(
-				"{{ 'Breadth' if type == 'bfs' else 'Depth' }}-first search on '{{ url }}'{% if keyword %} for the word '{{keyword}}' which was {{ 'found' if found == True else 'not found' }}.{% endif %}<br>" +
+				"{{ 'Breadth' if type == 'bfs' else 'Depth' }}-first search on '{{ url }}'{% if keyword %} for the word '{{keyword}}', which was {{ 'found' if found == True else 'not found' }}{% endif %} {% if early == True %} (ended early) {% endif %}<br>" +
 				timeStamp);
 		}
 
 		// change header to display end of crawl and elapsed time
 		function updateHeader(searchTime, found = false) {
+			$("#stop").hide();
 			$("#newCrawl").show();
 			$("#toggler").show();
-
 			$("#headerText").html(
 				"{{ 'Breadth' if type == 'bfs' else 'Depth' }}-first search on '{{ url }}'{% if keyword %} for the word '{{keyword}}'{% endif %} completed in " +
 				searchTime.toFixed(2) +
 				" seconds{% if keyword %}<br>Keyword '{{ keyword }}' " + ("{{ keyword }}" && !found ? "not " : "") +
 				"found.{% endif %}").removeClass("waiting");
+		}
+
+		// stop crawl gracefully
+		function stopCrawl() {
+			ws.send("stop");
+			$("#stop").hide();
 		}
 
 
@@ -486,7 +498,7 @@
 
 			// Start up the client websocket
 			function create_socket(hostname) {
-				var ws = new WebSocket(hostname);
+				ws = new WebSocket(hostname);
 				var startTime;
 				var found = false;
 

@@ -24,6 +24,7 @@ import os
 import re
 import sys
 import time
+import _thread
 import urllib.robotparser
 
 class Spider(object):
@@ -182,6 +183,11 @@ class BFS(Spider):
 
 	#completes the breadth first search
 	def search(self, ws, postid, database):
+
+		global endEarly
+		endEarly = False
+		_thread.start_new_thread(monitorSocket, (ws, postid, database))
+
 		#holds url and depth for each parent in queue before being processed
 		parentinfo = {
 			'url': self.start,
@@ -193,9 +199,9 @@ class BFS(Spider):
 
 		#starting url
 		keywordFound = False
-
+		
 		#while the depth of visited pages is less than the user-set limit
-		while not keywordFound and not self.URL_list.empty():
+		while not keywordFound and not self.URL_list.empty() and not endEarly:
 
 			#saves off data
 			parent = self.URL_list.get()
@@ -263,6 +269,7 @@ class BFS(Spider):
 							parentinfo['parent'] = currentURL
 							self.URL_list.put(parentinfo)
 
+			
 
 class DFS(Spider):
 
@@ -303,6 +310,10 @@ class DFS(Spider):
 
 	#performs the DFS on teh site
 	def search(self, ws, postid, database):
+		global endEarly
+		endEarly = False
+		_thread.start_new_thread(monitorSocket, (ws, postid, database))
+
 		#saves off information
 		currentURL = self.start
 		depth = 0
@@ -310,7 +321,7 @@ class DFS(Spider):
 		keywordFound = False
 
 		#while limit has not been reached, keyword hasn't been found and still urls available to crawl
-		while (len(self.visited) < self.limit+1) and not keywordFound and currentURL != None:
+		while (len(self.visited) < self.limit+1) and not keywordFound and currentURL != None and not endEarly:
 
 			if self.checkMedia(currentURL):# and currentURL != "Excluded":
 				#currentURL.rstrip('/')
@@ -419,4 +430,19 @@ def crawl(ws, url, limit, sType, keyword, postid, database):
 			print(sys.exc_info()[0])
 			ws.close(1000, "Closing Connection Due to Crawler Error")
 
-
+def monitorSocket(ws, postid, database):
+	global endEarly
+	while 1:
+		message = ws.receive()
+		if message == "stop":
+			endEarly = True
+			try: 
+				database.update_one(
+					{'_id': postid},
+					{ 
+						'$set': { 'early': True}
+					}
+				)
+			except Exception as e:
+				print(str(e))
+			break
