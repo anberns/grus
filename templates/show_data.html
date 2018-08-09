@@ -245,9 +245,10 @@
 
 			// See if this visited site is already in our list of sites
 			var old_site = undefined;
-			for (var node in dataset.nodes) {
-				if (dataset.nodes[node].url == site.url) {
-					old_site = dataset.nodes[node];
+			var nodes_len = dataset.nodes.length;
+			for (var i = 0; i < nodes_len; i++) {
+				if (dataset.nodes[i].url == site.url) {
+					old_site = dataset.nodes[i];
 					break;
 				}
 			}
@@ -271,20 +272,22 @@
 					// d3js to link to their respective nodes. Therefore, a simple <url>
 					// will have been convered to the node object, and the url is a property
 					// of source and target
-					for (var link in dataset.links) {
-						if (dataset.links[link].source.url == site.parent && 
-							dataset.links[link].target.url == site.url) {
-								dataset.links[link].in_path = true;
+					var links_len = dataset.links.length;
+					for (var i = 0; i < links_len; i++) {
+						if (dataset.links[i].source.url == site.parent && 
+							dataset.links[i].target.url == site.url) {
+								dataset.links[i].in_path = true;
 								break;
 							}
 					}
 				} else {
 					// If we are not showing the unvisited links, source and target have 
 					// not been touched by d3js and are still their respective urls
-					for (var link in dataset.links) {
-						if (dataset.links[link].source == site.parent && 
-							dataset.links[link].target == site.url) {
-								dataset.links[link].in_path = true;
+					var links_len = dataset.links.length;
+					for (var i = 0; i < links_len; i++) {
+						if (dataset.links[i].source == site.parent && 
+							dataset.links[i].target == site.url) {
+								dataset.links[i].in_path = true;
 								break;
 							}
 					}
@@ -298,8 +301,9 @@
 
 				// Find out if this url has been found on another page
 				var found = false;
-				for (var node in dataset.nodes) {
-					if (dataset.nodes[node].url == href) {
+				var nodes_len = dataset.nodes.length;
+				for (var i = 0; i < nodes_len; i++) {
+					if (dataset.nodes[i].url == href) {
 						found = true;
 						break;
 					}
@@ -330,9 +334,10 @@
 				old_site_len = old_links.length;
 
 			for (var i = 0; i < old_site_len; i++) {
-				for (var node in dataset.nodes) {
-					if (dataset.nodes[node].url == old_sites[i].id) {
-						["cx", "cy"].forEach(prop => dataset.nodes[node][prop] = old_sites[i][prop]);
+				var nodes_len = dataset.nodes.length;
+				for (var j = 0; j < nodes_len; j++) {
+					if (dataset.nodes[j].url == old_sites[i].id) {
+						["cx", "cy"].forEach(prop => dataset.nodes[j][prop] = old_sites[i][prop]);
 					}
 				}
 			}
@@ -355,11 +360,10 @@
 
 			// Prep the data
 			var unvisted_nodes = unvisted_links = visited_nodes = visited_links = [];
+			var nodes_len = dataset.nodes.length,
+				links_len = dataset.links.length;
 
-			var node_len = dataset.nodes.length,
-				link_len = dataset.links.length;
-
-			for (var i = 0; i < node_len; i++) {
+			for (var i = 0; i < nodes_len; i++) {
 				if (dataset.nodes[i].visited) {
 					visited_nodes.push(dataset.nodes[i]);
 				} else if (show_unvisited) {
@@ -367,7 +371,7 @@
 				}
 			}
 
-			for (var i = 0; i < link_len; i++) {
+			for (var i = 0; i < links_len; i++) {
 				if (dataset.links[i].in_path) {
 					visited_links.push(dataset.links[i]);
 				} else if (show_unvisited) {
