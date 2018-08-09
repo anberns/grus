@@ -81,12 +81,20 @@
 			<h1>Graphical Web Crawler - Grus</h1>
 			<p class="lead" id="headerText"></p>
 			<a id="newCrawl" class="btn btn-primary" href="/" role="button">New Crawl</a>
-			<div id="toggler" class="btn-group btn-group-toggle" data-toggle="buttons">
+			<div id="toggle_unvisited" class="btn-group btn-group-toggle" data-toggle="buttons">
 				<label class="btn btn-info active">
 					<input type="radio" id="hide" autocomplete="off"> Hide Unvisited
 				</label>
 				<label class="btn btn-info">
 					<input type="radio" id="show" autocomplete="off"> Show Unvisited
+				</label>
+			</div>
+			<div id="toggle_titles" class="btn-group btn-group-toggle" data-toggle="buttons">
+				<label class="btn btn-info active">
+					<input type="radio" id="hide" autocomplete="off"> Hide Titles
+				</label>
+				<label class="btn btn-info">
+					<input type="radio" id="show" autocomplete="off"> Show Titles
 				</label>
 			</div>
 		</div>
@@ -99,7 +107,7 @@
 		// load inital header for visualizer page
 		function loadInitialHeader() {
 			$("#newCrawl").hide();
-			$("#toggler").hide();
+			$("#toggle_unvisited").hide();
 
 			$("#headerText").addClass("waiting")
 				.text(
@@ -120,7 +128,7 @@
 		// change header to display end of crawl and elapsed time
 		function updateHeader(searchTime, found = false) {
 			$("#newCrawl").show();
-			$("#toggler").show();
+			$("#toggle_unvisited").show();
 
 			$("#headerText").html(
 				"{{ 'Breadth' if type == 'bfs' else 'Depth' }}-first search on '{{ url }}'{% if keyword %} for the word '{{keyword}}'{% endif %} completed in " +
@@ -145,11 +153,12 @@
 			links: []
 		};
 		var show_unvisited = false;
+		var show_titles = false;
 		var max_depth = 0;
 
 		// Toggle the grey nodes
-		$("#toggler :input").click(function() {
-			$("#toggler label").removeClass("active");
+		$("#toggle_unvisited :input").click(function() {
+			$("#toggle_unvisited label").removeClass("active");
 			$(this).parent().addClass("active");
 			if ($(this).attr("id") == "hide" && show_unvisited == true) {
 				show_unvisited = false;
@@ -165,6 +174,18 @@
 				});
 			}
 		});
+
+		// Toggle the grey nodes
+		$("#toggle_titles :input").click(function() {
+			$("#toggle_titles label").removeClass("active");
+			$(this).parent().addClass("active");
+			if ($(this).attr("id") == "hide" && show_titles == true) {
+				show_titles = false;
+			} else if ($(this).attr("id") == "show" && show_titles == false) {
+				show_titles = true;
+			}
+		});
+
 
 		// Create the svg where the visualization will reside
 		var svg = d3.select('#chart')
@@ -382,7 +403,7 @@
 				.text(d => d.url);
 
 			// Update titles
-			title = title.data(data.nodes.filter(el => el.visited), d => d.url)
+			title = title.data(show_titles ? data.nodes.filter(el => el.visited) : [], d => d.url)
 				.text(d => d.title);
 
 			// Delete removed sites
