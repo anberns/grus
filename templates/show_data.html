@@ -181,8 +181,16 @@
 			$(this).parent().addClass("active");
 			if ($(this).attr("id") == "hide" && show_titles == true) {
 				show_titles = false;
+				update({
+					nodes: show_unvisited ? dataset.nodes : dataset.nodes.filter(el => el.visited),
+					links: show_unvisited ? dataset.links : dataset.links.filter(el => el.in_path)
+				});
 			} else if ($(this).attr("id") == "show" && show_titles == false) {
 				show_titles = true;
+				update({
+					nodes: show_unvisited ? dataset.nodes : dataset.nodes.filter(el => el.visited),
+					links: show_unvisited ? dataset.links : dataset.links.filter(el => el.in_path)
+				});
 			}
 		});
 
