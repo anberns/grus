@@ -67,9 +67,6 @@ class Spider(object):
 			rules.set_url(urljoin(base,'robots.txt'))	
 	
 			try:
-				print("Fetching rules for:", base)
-				#read the rules
-				#print("Fetching rules for:", base)
 				rules.read()
 
 			except:
