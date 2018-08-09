@@ -87,6 +87,7 @@ class Spider(object):
 
 	def checkMedia(self, URL):
 		#print("Checking for media...")
+		URL.rstrip('/')
 		toIgnore = ['mp4', 'mp3', 'mov', 'flv', 'wmv', 'avi', 'png', 'gif', 'jpg', 'bmp']
 		for ending in toIgnore:
 			if URL.endswith(ending):
