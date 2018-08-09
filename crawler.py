@@ -88,7 +88,7 @@ class Spider(object):
 	def checkMedia(self, URL):
 		#print("Checking for media...")
 		if URL.endswith('/'):
-			URL = URL[1:]
+			URL = URL[:-1]
 
 		toIgnore = ['mp4', 'mp3', 'mov', 'flv', 'wmv', 'avi', 'png', 'gif', 'jpg', 'bmp']
 		for ending in toIgnore:
@@ -99,7 +99,7 @@ class Spider(object):
 	
 	def parsePage(self, URL):
 		if URL.endswith('/'):
-			URL = URL[1:]
+			URL = URL[:-1]
 
 		if not self.checkRbTXT(URL):
 			return None
