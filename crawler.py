@@ -105,19 +105,19 @@ class Spider(object):
 
 			#returns None upon any page loading error
 			except requests.exceptions.HTTPError:
-				print("Error in retrieving URL")
+				print("Error in retrieving URL: " + URL)
 				return None
 			except requests.exceptions.SSLError:
 				print("Error in SSL certificate")
 				return None
 			except requests.exceptions.Timeout:
-				print("Error in retrieving URL due to Timeout")
+				print("Error in retrieving URL due to Timeout: " + URL)
 				return None
 			except requests.exceptions.TooManyRedirects:
 				print("Error in retrieving URL due to redirects")
 				return None
 			except requests.exceptions.RequestException:
-				print("Error in retrieving URL")
+				print("Error in retrieving URL: " + URL)
 				return None
 
 			#or returns soup
