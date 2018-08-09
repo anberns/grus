@@ -45,8 +45,8 @@ class Spider(object):
 		else:
 			self.keyword = None
 		self.visited = collections.defaultdict(dict)
-		self.rulesDict = {}
-		self.noRules = []
+		self.rulesDict = collections.defaultdict(dict)
+		self.noRules = set()
 		self.neverCrawl = set()
 
 	#Checks the robots.txt to see if crawls are allowed
@@ -75,7 +75,7 @@ class Spider(object):
 
 			except:
 				print("Cannot fetch rules from:", base)
-				self.noRules.append(base)
+				self.noRules.add(base)
 				return True
 			
 			else:
