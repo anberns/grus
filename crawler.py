@@ -103,7 +103,7 @@ class Spider(object):
 
 		else:	
 			try:  #attempts to load page first
-				response = requests.get(URL, timeout=5)
+				response = requests.get(URL, timeout=2)
 				response.raise_for_status()
 
 			#returns None upon any page loading error
