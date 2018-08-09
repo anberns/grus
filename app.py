@@ -81,10 +81,9 @@ def startCrawl(ws):
 	keyword = session['keyword']
 	path = []
 	found = False
-	early = False
 
 	database = mongo.db.test #access test collection
-	postid = database.insert({'userId' : userId, 'url': url, 'limit': limit, 'sType' : sType, 'keyword' : keyword, 'path': path, 'found': found, 'early': early})
+	postid = database.insert({'userId' : userId, 'url': url, 'limit': limit, 'sType' : sType, 'keyword' : keyword, 'path': path, 'found': found})
 
 	#call crawler, passing socket and db info
 	crawler.crawl(ws, url, int(limit), sType, keyword, postid, database)
@@ -100,7 +99,7 @@ def getPreviousCrawl():
 	#get data from id
 	queryData = test.find_one({'_id' : ObjectId(docId)})
 
-	return render_template('show_data.html', data=queryData['path'], url=queryData['url'], type=queryData['sType'], keyword=queryData['keyword'], found = queryData['found'], early = queryData['early'], docId = docId)
+	return render_template('show_data.html', data=queryData['path'], url=queryData['url'], type=queryData['sType'], keyword=queryData['keyword'], found = queryData['found'], docId = docId)
 
 
 if __name__ == "__main__":
