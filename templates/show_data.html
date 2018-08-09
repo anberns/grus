@@ -162,35 +162,23 @@
 			$(this).parent().addClass("active");
 			if ($(this).attr("id") == "hide" && show_unvisited == true) {
 				show_unvisited = false;
-				update({
-					nodes: dataset.nodes.filter(el => el.visited),
-					links: dataset.links.filter(el => el.in_path)
-				});
+				update();
 			} else if ($(this).attr("id") == "show" && show_unvisited == false) {
 				show_unvisited = true;
-				update({
-					nodes: dataset.nodes,
-					links: dataset.links
-				});
+				update();
 			}
 		});
 
-		// Toggle the grey nodes
+		// Toggle the titles
 		$("#toggle_titles :input").click(function() {
 			$("#toggle_titles label").removeClass("active");
 			$(this).parent().addClass("active");
 			if ($(this).attr("id") == "hide" && show_titles == true) {
 				show_titles = false;
-				update({
-					nodes: show_unvisited ? dataset.nodes : dataset.nodes.filter(el => el.visited),
-					links: show_unvisited ? dataset.links : dataset.links.filter(el => el.in_path)
-				});
+				update();
 			} else if ($(this).attr("id") == "show" && show_titles == false) {
 				show_titles = true;
-				update({
-					nodes: show_unvisited ? dataset.nodes : dataset.nodes.filter(el => el.visited),
-					links: show_unvisited ? dataset.links : dataset.links.filter(el => el.in_path)
-				});
+				update();
 			}
 		});
 
@@ -255,7 +243,14 @@
 			site.visited = true;
 			if (site.depth > max_depth) max_depth = site.depth;
 
-			var old_site = dataset.nodes.find(el => el.url == site.url);
+			// See if this visited site is already in our list of sites
+			var old_site = undefined;
+			for (var node in dataset.nodes) {
+				if (dataset.nodes[node].url == site.url) {
+					old_site = dataset.nodes[node];
+					break;
+				}
+			}
 
 			if (old_site) {
 				// Update node properties if this site was already found
@@ -263,61 +258,123 @@
 					old_site[prop] = site[prop];
 				}
 			} else {
+				// This is a new site, add it to the dataset (only happens on the first site)
 				dataset.nodes.push(site);
 			}
 
-			// Add a link for a site we visited
+			// Mark the link from the site's parent to the site as in the path of
+			// visited nodes. This link should already exist because it would have been
+			// in the parent's links
 			if (site.parent) {
 				if (show_unvisited) {
-					dataset.links.find(el => el.source.url == site.parent &&
-						el.target.url == site.url).in_path = true;
+					// If we are showing the unvisited links, they will have been passed to
+					// d3js to link to their respective nodes. Therefore, a simple <url>
+					// will have been convered to the node object, and the url is a property
+					// of source and target
+					for (var link in dataset.links) {
+						if (dataset.links[link].source.url == site.parent && 
+							dataset.links[link].target.url == site.url) {
+								dataset.links[link].in_path = true;
+								break;
+							}
+					}
 				} else {
-					dataset.links.find(el => el.source == site.parent &&
-						el.target == site.url).in_path = true;
+					// If we are not showing the unvisited links, source and target have 
+					// not been touched by d3js and are still their respective urls
+					for (var link in dataset.links) {
+						if (dataset.links[link].source == site.parent && 
+							dataset.links[link].target == site.url) {
+								dataset.links[link].in_path = true;
+								break;
+							}
+					}
 				}
 			}
 
 			// Add links to ones found on pages
-			site.links.forEach(href => {
-				if (dataset.nodes.findIndex(el => el.url == href) == -1) {
-					// Add a new site to our list of sites
+			var links_len = site.links.length;
+			for (var i = 0; i < links_len; i++) {
+				var href = site.links[i];
+
+				// Find out if this url has been found on another page
+				var found = false;
+				for (var node in dataset.nodes) {
+					if (dataset.nodes[node].url == href) {
+						found = true;
+						break;
+					}
+				}
+
+				// If this is a new url, add it to our list of nodea
+				if (!found) {
 					dataset.nodes.push({
 						url: href,
 						cx: 0,
 						cy: 0
 					});
 				}
+
+				// Add a link from our visited site to this found url
 				dataset.links.push({
 					source: site.url,
 					target: href,
 					depth: site.depth,
 					in_path: false
 				});
-			});
+			}
 
 			// Update the dataset with svg properties
-			old_sites = d3.selectAll('circle').data().forEach(circle => {
-				var dataset_node = dataset.nodes.find(el => el.url == circle.id);
-				if (dataset_node)
-					["cx", "cy"].forEach(prop => dataset_node[prop] = circle[prop]);
-			});
-			old_links = d3.selectAll('line').data().forEach(line => {
-				var dataset_link = dataset.links.find(el => el.source + "-" + el.target == line.id);
-				if (dataset_link)
-					["x1", "y1", "x2", "y2"].forEach(prop => dataset_link[prop] = circle[prop]);
-			})
+			old_sites = d3.selectAll('circle').data();
+			old_links = d3.selectAll('line').data();
+			var old_site_len = old_sites.length,
+				old_site_len = old_links.length;
 
-			update({
-				nodes: show_unvisited ? dataset.nodes : dataset.nodes.filter(el => el.visited),
-				links: show_unvisited ? dataset.links : dataset.links.filter(el => el.in_path)
-			});
+			for (var i = 0; i < old_site_len; i++) {
+				for (var node in dataset.nodes) {
+					if (dataset.nodes[node].url == old_sites[i].id) {
+						["cx", "cy"].forEach(prop => dataset.nodes[node][prop] = old_sites[i][prop]);
+					}
+				}
+			}
+
+			// Needed?????
+			// old_links.forEach(line => {
+			// 	var dataset_link = dataset.links.find(el => el.source + "-" + el.target == line.id);
+			// 	if (dataset_link)
+			// 		["x1", "y1", "x2", "y2"].forEach(prop => dataset_link[prop] = circle[prop]);
+			// })
+
+			update();
 		}
 		/**
 		 * Sets the data used for the visualization
 		 *
 		 * @param {*} data Object containing the nodes and links to use for the viz
 		 */
-		function update(data) {
+		function update() {
+
+			// Prep the data
+			var unvisted_nodes = unvisted_links = visited_nodes = visited_links = [];
+
+			var node_len = dataset.nodes.length,
+				link_len = dataset.links.length;
+
+			for (var i = 0; i < node_len; i++) {
+				if (dataset.nodes[i].visited) {
+					visited_nodes.push(dataset.nodes[i]);
+				} else if (show_unvisited) {
+					unvisited_nodes.push(dataset.nodes[i]);
+				}
+			}
+
+			for (var i = 0; i < link_len; i++) {
+				if (dataset.links[i].in_path) {
+					visited_links.push(dataset.links[i]);
+				} else if (show_unvisited) {
+					unvisited_links.push(dataset.links[i]);
+				}
+			}
+
 
 			// Update the markers
 			d3.selectAll("marker").remove();
@@ -335,8 +392,9 @@
 				.append("svg:path")
 				.attr("d", "M0,-5L10,0L0,5");
 
+
 			// Update links
-			link = link.data(data.links.filter(el => !el.in_path), d => d.source.url + "-" + d.target.url)
+			link = link.data(unvisited_links, d => d.source.url + "-" + d.target.url)
 				.attr("marker-end", d => "url(#marker_ou_of_path)")
 				.attr("stroke", "#ccc");
 
@@ -350,7 +408,7 @@
 
 
 			// Update nodes
-			node = node.data(data.nodes.filter(el => !el.visited), d => d.url)
+			node = node.data(unvisted_nodes, d => d.url)
 				.attr("fill", "#ccc")
 				.attr("r", 3);
 
@@ -373,7 +431,7 @@
 				.text(d => d.url);
 
 			// Update links
-			path_link = path_link.data(data.links.filter(el => el.in_path), d => d.source.url + "-" + d.target.url)
+			path_link = path_link.data(visited_links, d => d.source.url + "-" + d.target.url)
 				.attr("marker-end", d => "url(#marker_" + d.depth + ")")
 				.attr("stroke", d => color(d.depth));
 
@@ -388,7 +446,7 @@
 
 
 			// Update nodes
-			path_node = path_node.data(data.nodes.filter(el => el.visited), d => d.url)
+			path_node = path_node.data(visited_nodes, d => d.url)
 				.attr("fill", d => color(d.depth))
 				.attr("r", d => d.found ? 10 : 5);
 
@@ -411,7 +469,7 @@
 				.text(d => d.url);
 
 			// Update titles
-			title = title.data(show_titles ? data.nodes.filter(el => el.visited) : [], d => d.url)
+			title = title.data(show_titles ? visited_nodes : [], d => d.url)
 				.text(d => d.title);
 
 			// Delete removed sites
@@ -432,8 +490,8 @@
 				.text(d => d.url);
 
 			// Set the nodes and links for the visualization
-			simulation.nodes(data.nodes);
-			simulation.force("link").links(data.links);
+			simulation.nodes(show_unvisited ? dataset.nodes : visited_nodes);
+			simulation.force("link").links(show_unvisited ? dataset.links : visited_links);
 			simulation.alpha(0.3).restart();
 		}
 
@@ -502,7 +560,10 @@
 		var data = {{data|tojson}};
 		if (data) {
 			loadPrevHeader();
-			data.forEach(site => parse_data(JSON.parse(site)));
+			var len = data.length;
+			for (var i = 0; i < len; i++) {
+				parse_data(JSON.parse(data[i]));
+			}
 		} else {
 
 			// load header
