@@ -57,8 +57,8 @@ class Spider(object):
 
 		if URL == self.start:
 			return True
- 		#checks if rules were already checked and found missing/unreadable
 
+ 		#checks if rules were already checked and found missing/unreadable
 		if base in self.noRules:
 			return True
 
@@ -74,7 +74,7 @@ class Spider(object):
 				rules.read()
 
 			except:
-				print("Cannot fetch rules from:", base)
+				#print("Cannot fetch rules from:", base)
 				self.noRules.append(base)
 				return True
 			
@@ -83,7 +83,7 @@ class Spider(object):
 				self.rulesDict[base] = rules
 		
 		if not self.rulesDict[base].can_fetch("*", URL):
-			print (URL, "was NOT INCLUDED per robots.txt")
+			#print (URL, "was NOT INCLUDED per robots.txt")
 			self.neverCrawl.append(URL)
 	
 		#return whether the site allows crawls for that URL
@@ -103,8 +103,6 @@ class Spider(object):
 
 	
 	def parsePage(self, URL):
-		if URL.endswith('/'):
-			URL = URL[:-1]
 
 		if not self.checkRbTXT(URL):
 			return None
@@ -119,24 +117,24 @@ class Spider(object):
 
 			#returns None upon any page loading error
 			except requests.exceptions.HTTPError:
-				print("Error in retrieving URL HTTP Error: " + URL)
+				#print("Error in retrieving URL HTTP Error: " + URL)
 				self.neverCrawl.append(URL)
 				return None
 			except requests.exceptions.SSLError:
-				print("Error in SSL certificate")
+				#print("Error in SSL certificate")
 				self.neverCrawl.append(URL)
 				return None
 			except requests.exceptions.Timeout:
-				print("Error in retrieving URL due to Timeout: " + URL)
+				#print("Error in retrieving URL due to Timeout: " + URL)
 				self.neverCrawl.append(URL)
 				return None
 			except requests.exceptions.TooManyRedirects:
-				print("Error in retrieving URL due to redirects")
+				#print("Error in retrieving URL due to redirects")
 				self.neverCrawl.append(URL)
 				return None
 			except requests.exceptions.RequestException:
 				self.neverCrawl.append(URL)
-				print("Error in retrieving URL due to other error: " + URL)
+				#print("Error in retrieving URL due to other error: " + URL)
 				return None
 
 			#or returns soup
