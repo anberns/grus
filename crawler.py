@@ -46,8 +46,8 @@ class Spider(object):
 			self.keyword = None
 		self.visited = collections.defaultdict(dict)
 		self.rulesDict = collections.defaultdict(dict)
-		self.noRules = set()
-		self.neverCrawl = set()
+		self.noRules = []
+		self.neverCrawl = []
 
 	#Checks the robots.txt to see if crawls are allowed
 	def checkRbTXT(self, URL):
@@ -75,7 +75,7 @@ class Spider(object):
 
 			except:
 				print("Cannot fetch rules from:", base)
-				self.noRules.add(base)
+				self.noRules.append(base)
 				return True
 			
 			else:
@@ -84,7 +84,7 @@ class Spider(object):
 		
 		if not self.rulesDict[base].can_fetch("*", URL):
 			print (URL, "was NOT INCLUDED per robots.txt")
-			self.neverCrawl.add(URL)
+			self.neverCrawl.append(URL)
 	
 		#return whether the site allows crawls for that URL
 		return self.rulesDict[base].can_fetch("*", URL)
@@ -120,22 +120,22 @@ class Spider(object):
 			#returns None upon any page loading error
 			except requests.exceptions.HTTPError:
 				print("Error in retrieving URL HTTP Error: " + URL)
-				self.neverCrawl.add(URL)
+				self.neverCrawl.append(URL)
 				return None
 			except requests.exceptions.SSLError:
 				print("Error in SSL certificate")
-				self.neverCrawl.add(URL)
+				self.neverCrawl.append(URL)
 				return None
 			except requests.exceptions.Timeout:
 				print("Error in retrieving URL due to Timeout: " + URL)
-				self.neverCrawl.add(URL)
+				self.neverCrawl.append(URL)
 				return None
 			except requests.exceptions.TooManyRedirects:
 				print("Error in retrieving URL due to redirects")
-				self.neverCrawl.add(URL)
+				self.neverCrawl.append(URL)
 				return None
 			except requests.exceptions.RequestException:
-				self.neverCrawl.add(URL)
+				self.neverCrawl.append(URL)
 				print("Error in retrieving URL due to other error: " + URL)
 				return None
 
