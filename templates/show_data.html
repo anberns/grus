@@ -74,7 +74,6 @@
 
 		.pulse {
 			fill-opacity: 0;
-			transform-origin: 50% 50%;
 			animation-duration: 2s;
 			animation-name: pulse;
 			animation-iteration-count: infinite;
@@ -482,7 +481,7 @@
 			path_node = path_node.data(visited_nodes, d => d.url)
 				.attr("class", d => d.found ? "pulse" : "")
 				.attr("fill", d => color(d.depth))
-				.attr("r", d => d.found ? 10 : 5);
+				.attr("r", 5);
 
 			// Delete removed sites
 			path_node.exit().remove();
@@ -490,7 +489,7 @@
 			// Add any new sites
 			path_node = path_node.enter().append("circle")
 				.attr("fill", d => color(d.depth))
-				.attr("r", d => d.found ? 10 : 5)
+				.attr("r", 5)
 				.attr("class", d => d.found ? "pulse" : "")
 				.on("click", d => window.open(d.url))
 				.call(d3.drag()
@@ -549,7 +548,8 @@
 				.attr("y2", d => d.target.y);
 
 			path_node.attr("cx", d => d.x)
-				.attr("cy", d => d.y);
+				.attr("cy", d => d.y)
+				.attr("transform-origin", d => "" + d.x + ", " + d.y);
 
 			title.attr("x", d => d.x)
 				.attr("y", d => d.y);
