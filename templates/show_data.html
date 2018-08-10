@@ -113,7 +113,7 @@
 				.text(
 					"Performing a {{ 'breadth' if type == 'bfs' else 'depth' }}-first search on '{{ url }}'{% if keyword %} for the word '{{keyword}}'{% endif %}"
 				)
-				.append("<span>.</span>").append("<span>.</span>").append("<span>.</span>");
+				.append("<span>.</span>").append("<span>.</span>").append("<span>.</span>").append("<br><span id='node_counter'></span>");
 		}
 
 		// header to display previously stored crawl
@@ -383,6 +383,10 @@
 				}
 			}
 
+			var counter_text = "Unique Sites: " + dataset.nodes.length +
+								" - Visited Sites: " + visited_nodes.length +
+								" - Links: " + dataset.links.length;
+			$("#node_counter").text(counter_text);
 
 			// Update the markers
 			d3.selectAll("marker").remove();
