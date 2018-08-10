@@ -493,23 +493,16 @@
 				.text(d => d.url);
 
 			// Update nodes
-			found_node = found_node.data(keyword_node, d => d.url)
-				.attr("fill", d => color(d.depth));
-
-			// Delete removed sites
-			found_node.exit().remove();
-
-			// Add any new sites
-			found_node = found_node.enter().append("circle")
+			found_node.data(keyword_node, d => d.url)
+				.enter().append("circle")
+				.attr("r", 5)
 				.attr("fill", d => color(d.depth))
 				.on("click", d => window.open(d.url))
 				.call(d3.drag()
 					.on("start", drag_started)
 					.on("drag", dragged)
 					.on("end", drag_ended))
-				.merge(found_node);
-
-			found_node.enter().transition()
+				.transition()
 				.duration(2500)
 				.on("start", function repeat() {
 					d3.active(this)
