@@ -71,24 +71,6 @@
 		.waiting span:nth-child(3) {
 			animation-delay: .4s;
 		}
-
-		.pulse {
-			fill-opacity: 0;
-			animation-duration: 2s;
-			animation-name: pulse;
-			animation-iteration-count: infinite;
-		}
-
-		@keyframes pulse {
-			from {
-				fill-opacity: 1;
-				transform: scale(1);
-			}
-			to {
-				fill-opacity: 0;
-				transform: scale(3);
-			}
-		}
 	</style>
 </head>
 
@@ -253,6 +235,11 @@
 			.attr("class", "titles")
 			.selectAll("text");
 
+		// A selection of all of the visual representations of the site names
+		var found_node = svg.append("g")
+			.attr("class", "found_node")
+			.selectAll("circle");
+
 
 		/**
 		 * Reformat data from the server to fit the format of the visualization
@@ -382,7 +369,8 @@
 			var unvisited_nodes = [],
 				unvisited_links = [],
 				visited_nodes = [],
-				visited_links = [];
+				visited_links = [],
+				keyword_node = [];
 
 			var nodes_len = dataset.nodes.length,
 				links_len = dataset.links.length;
@@ -392,6 +380,9 @@
 					visited_nodes.push(dataset.nodes[i]);
 				} else if (show_unvisited) {
 					unvisited_nodes.push(dataset.nodes[i]);
+				}
+				if (dataset.nodes[i].found) {
+					keyword_node.push(dataset.nodes[i]);
 				}
 			}
 
@@ -479,7 +470,6 @@
 
 			// Update nodes
 			path_node = path_node.data(visited_nodes, d => d.url)
-				.attr("class", d => d.found ? "pulse" : "")
 				.attr("fill", d => color(d.depth))
 				.attr("r", 5);
 
@@ -490,7 +480,6 @@
 			path_node = path_node.enter().append("circle")
 				.attr("fill", d => color(d.depth))
 				.attr("r", 5)
-				.attr("class", d => d.found ? "pulse" : "")
 				.on("click", d => window.open(d.url))
 				.call(d3.drag()
 					.on("start", drag_started)
@@ -501,6 +490,27 @@
 			// Show URL on hover
 			path_node.append("title")
 				.text(d => d.url);
+
+			// Update nodes
+			found_node = found_node.data(keyword_node, d => d.url)
+				.attr("fill", d => color(d.depth))
+				.attr("opacity", .25)
+				.attr("r", 15);
+
+			// Delete removed sites
+			found_node.exit().remove();
+
+			// Add any new sites
+			found_node = found_node.enter().append("circle")
+				.attr("fill", d => color(d.depth))
+				.attr("opacity", .25)
+				.attr("r", 15)
+				.on("click", d => window.open(d.url))
+				.call(d3.drag()
+					.on("start", drag_started)
+					.on("drag", dragged)
+					.on("end", drag_ended))
+				.merge(found_node);
 
 			// Update titles
 			title = title.data(show_titles ? visited_nodes : [], d => d.url)
@@ -548,8 +558,10 @@
 				.attr("y2", d => d.target.y);
 
 			path_node.attr("cx", d => d.x)
-				.attr("cy", d => d.y)
-				.attr("transform-origin", d => "" + d.x + ", " + d.y);
+				.attr("cy", d => d.y);
+			
+			found_node.attr("cx", d => d.x)
+				.attr("cy", d => d.y);
 
 			title.attr("x", d => d.x)
 				.attr("y", d => d.y);
