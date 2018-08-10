@@ -309,7 +309,7 @@
 					}
 				}
 
-				// If this is a new url, add it to our list of nodea
+				// If this is a new url, add it to our list of nodes
 				if (!found) {
 					dataset.nodes.push({
 						url: href,
@@ -416,7 +416,7 @@
 
 
 			// Update nodes
-			node = node.data(unvisted_nodes, d => d.url)
+			node = node.data(unvisited_nodes, d => d.url)
 				.attr("fill", "#ccc")
 				.attr("r", 3);
 
