@@ -225,6 +225,11 @@
 			.attr("class", "path_link")
 			.selectAll("line");
 
+		// A selection of all of the visual representations of a node where the keyword was found
+		var found_node = svg.append("g")
+			.attr("class", "found_node")
+			.selectAll("circle");
+
 		// A selection of all of the visual representations of the sites in the path
 		var path_node = svg.append("g")
 			.attr("class", "path_node")
@@ -235,10 +240,6 @@
 			.attr("class", "titles")
 			.selectAll("text");
 
-		// A selection of all of the visual representations of the site names
-		var found_node = svg.append("g")
-			.attr("class", "found_node")
-			.selectAll("circle");
 
 
 		/**
@@ -493,19 +494,7 @@
 
 			// Update nodes
 			found_node = found_node.data(keyword_node, d => d.url)
-				.attr("fill", d => color(d.depth))
-				.transition()
-				.duration(2500)
-				.on("start", function repeat() {
-					d3.active(this)
-						.attr("r", 5)
-						.attr("opacity", 1)
-						.transition()
-						.attr("r", 15)
-						.attr("opacity", 0)
-						.transition()
-						.on("start", repeat);
-				});
+				.attr("fill", d => color(d.depth));
 
 			// Delete removed sites
 			found_node.exit().remove();
@@ -518,7 +507,9 @@
 					.on("start", drag_started)
 					.on("drag", dragged)
 					.on("end", drag_ended))
-				.transition()
+				.merge(found_node);
+
+			found_node.enter().transition()
 				.duration(2500)
 				.on("start", function repeat() {
 					d3.active(this)
@@ -529,8 +520,7 @@
 						.attr("opacity", 0)
 						.transition()
 						.on("start", repeat);
-				})
-				.merge(found_node);
+				});
 
 			// Update titles
 			title = title.data(show_titles ? visited_nodes : [], d => d.url)
