@@ -359,7 +359,11 @@
 		function update() {
 
 			// Prep the data
-			var unvisted_nodes = unvisited_links = visited_nodes = visited_links = [];
+			var unvisted_nodes = [],
+				unvisited_links = [],
+				visited_nodes = [],
+				visited_links = [];
+
 			var nodes_len = dataset.nodes.length,
 				links_len = dataset.links.length;
 
