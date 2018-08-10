@@ -48,6 +48,7 @@ class Spider(object):
 		self.rulesDict = collections.defaultdict(dict)
 		self.noRules = []
 		self.neverCrawl = []
+		self.total = 0
 
 	#Checks the robots.txt to see if crawls are allowed
 	def checkRbTXT(self, URL):
@@ -182,6 +183,7 @@ class BFS(Spider):
 
 			#verifies link found is valid url and not a duplicate and not the same as the parent url
 			if validators.url(url) and url not in connections and url != parent:
+				self.total += 1
 				connections.append(url)
 
 		return connections
@@ -201,7 +203,7 @@ class BFS(Spider):
 		keywordFound = False
 
 		#while the depth of visited pages is less than the user-set limit
-		while not keywordFound and not self.URL_list.empty():
+		while not keywordFound and not self.URL_list.empty() and self.total < 20000:
 			#saves off data to send
 			parent = self.URL_list.get()
 			currentURL = parent.get('url')
@@ -285,7 +287,8 @@ class DFS(Spider):
 			url = self.formatURL(base, url)
 			
 			#verifies link found is valid url and not a duplicate
-			if validators.url(url) and url not in self.URL_list and url not in self.visited and url != parent:
+			if validators.url(url) and url not in self.URL_list and url not in self.visited and url != parent and self.total < 20000:
+				self.total += 1
 				self.URL_list.append(url)
 
 	#finds and returns a random link from the list
