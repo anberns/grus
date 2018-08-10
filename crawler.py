@@ -409,7 +409,7 @@ def crawl(ws, url, limit, sType, keyword, postid, database):
 			crawler.search(ws, postid, database)
 			ws.close(1000, "Closing Connection Normally")
 		except:
-			print(sys.exc_info()[0])
+			print(sys.exc_info())
 			ws.close(1000, "Closing Connection Due to Crawler Error")
 
 	else:
@@ -419,7 +419,7 @@ def crawl(ws, url, limit, sType, keyword, postid, database):
 			crawler.search(ws, postid, database)
 			ws.close(1000, "Closing Connection Normally")
 		except:
-			print(sys.exc_info()[0])
+			print(sys.exc_info())
 			ws.close(1000, "Closing Connection Due to Crawler Error")
 
 
