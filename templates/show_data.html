@@ -302,8 +302,8 @@
 				// Find out if this url has been found on another page
 				var found = false;
 				var nodes_len = dataset.nodes.length;
-				for (var i = 0; i < nodes_len; i++) {
-					if (dataset.nodes[i].url == href) {
+				for (var j = 0; j < nodes_len; j++) {
+					if (dataset.nodes[j].url == href) {
 						found = true;
 						break;
 					}
