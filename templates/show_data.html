@@ -73,21 +73,43 @@
 		}
 
 		.pulse {
-			fill-opacity: 0;
-			transform-origin: 50% 50%;
-			animation-duration: 2s;
-			animation-name: pulse;
-			animation-iteration-count: infinite;
+			@include circle(20px);
+			background: tomato;
+			position: relative;
+			&:before,
+			&:after {
+				content: "";
+				@include circle(20px);
+				background-color: tomato;
+				position: absolute;
+				top: 0;
+				right: 0;
+				bottom: 0;
+				left: 0;
+				margin: auto;
+				transform: scale(0.5);
+				transform-origin: center center;
+				animation: pulse-me 3s linear infinite;
+			}
+			&:after {
+				animation-delay: 2s;
+			}
 		}
 
-		@keyframes pulse {
-			from {
-				fill-opacity: 1;
-				transform: scale(1);
+		@keyframes pulse-me {
+			0% {
+				transform: scale(0.5);
+				opacity: 0;
 			}
-			to {
-				fill-opacity: 0;
-				transform: scale(3);
+			50% {
+				opacity: 0.1;
+			}
+			70% {
+				opacity: 0.09;
+			}
+			100% {
+				transform: scale(5);
+				opacity: 0;
 			}
 		}
 	</style>
