@@ -62,9 +62,6 @@ class Spider(object):
 		if base in self.noRules:
 			return True
 
-		if URL in self.neverCrawl:
-			return False
-
 		if base not in self.rulesDict:
 			#create a robotparser and set the url
 			rules = urllib.robotparser.RobotFileParser()
@@ -104,10 +101,10 @@ class Spider(object):
 	
 	def parsePage(self, URL):
 
-		if not self.checkRbTXT(URL):
+		if URL in self.neverCrawl:
 			return None
 
-		if URL in self.neverCrawl:
+		if not self.checkRbTXT(URL):
 			return None
 
 		else:	
