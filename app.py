@@ -52,10 +52,10 @@ def launch():
 	try:
 		valid = requests.get(url)
 		if valid.status_code != requests.codes.ok:
-			flash("'" + url + "' does not exist. Please try again.")
+			flash("There was a problem with '" + url + "'. Please try another url.")
 			return redirect(url_for('index'))
 	except Exception as e:
-		flash("'" + url + "' does not exist. Please try again.")
+		flash("There was a problem with '" + url + "'. Please try another url.")
 		return redirect(url_for('index'))
 
 
