@@ -493,27 +493,25 @@
 				.text(d => d.url);
 
 			// Update nodes
-			found_node.data(keyword_node, d => d.url)
-				.enter().append("circle")
-				.attr("r", 5)
+			found_node = found_node.data(keyword_node, d => d.url)
 				.attr("fill", d => color(d.depth))
+				.attr("opacity", .25)
+				.attr("r", 15);
+
+			// Delete removed sites
+			found_node.exit().remove();
+
+			// Add any new sites
+			found_node = found_node.enter().append("circle")
+				.attr("fill", d => color(d.depth))
+				.attr("opacity", .25)
+				.attr("r", 15)
 				.on("click", d => window.open(d.url))
 				.call(d3.drag()
 					.on("start", drag_started)
 					.on("drag", dragged)
 					.on("end", drag_ended))
-				.transition()
-				.duration(2500)
-				.on("start", function repeat() {
-					d3.active(this)
-						.attr("r", 5)
-						.attr("opacity", 1)
-						.transition()
-						.attr("r", 15)
-						.attr("opacity", 0)
-						.transition()
-						.on("start", repeat);
-				});
+				.merge(found_node);
 
 			// Update titles
 			title = title.data(show_titles ? visited_nodes : [], d => d.url)
