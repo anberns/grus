@@ -282,18 +282,18 @@
 					// of source and target
 					var links_len = dataset.links.length;
 					for (var i = 0; i < links_len; i++) {
-						if (dataset.links[i].source.url == site.parent && 
+						if (dataset.links[i].source.url == site.parent &&
 							dataset.links[i].target.url == site.url) {
 								dataset.links[i].in_path = true;
 								break;
 							}
 					}
 				} else {
-					// If we are not showing the unvisited links, source and target have 
+					// If we are not showing the unvisited links, source and target have
 					// not been touched by d3js and are still their respective urls
 					var links_len = dataset.links.length;
 					for (var i = 0; i < links_len; i++) {
-						if (dataset.links[i].source == site.parent && 
+						if (dataset.links[i].source == site.parent &&
 							dataset.links[i].target == site.url) {
 								dataset.links[i].in_path = true;
 								break;
@@ -494,24 +494,37 @@
 
 			// Update nodes
 			found_node = found_node.data(keyword_node, d => d.url)
-				.attr("fill", d => color(d.depth))
-				.attr("opacity", .25)
-				.attr("r", 15);
+				.attr("fill", d => color(d.depth));
 
 			// Delete removed sites
 			found_node.exit().remove();
 
 			// Add any new sites
-			found_node = found_node.enter().append("circle")
+			var found_node_enter = found_node.enter().append("circle")
 				.attr("fill", d => color(d.depth))
-				.attr("opacity", .25)
-				.attr("r", 15)
+				.attr("r", 5)
 				.on("click", d => window.open(d.url))
 				.call(d3.drag()
 					.on("start", drag_started)
 					.on("drag", dragged)
-					.on("end", drag_ended))
-				.merge(found_node);
+					.on("end", drag_ended));
+
+			found_node_enter.transition()
+				.duration(1500)
+				.on("start", function repeat() {
+					d3.active(this)
+						.attr("r", 5)
+						.attr("opacity", .75)
+						.transition()
+						.duration(1500)
+						.attr("r", 15)
+						.attr("opacity", 0)
+						.transition()
+						.duration(0)
+						.on("start", repeat);
+				});
+
+			found_node = found_node_enter.merge(found_node);
 
 			// Update titles
 			title = title.data(show_titles ? visited_nodes : [], d => d.url)
@@ -560,7 +573,7 @@
 
 			path_node.attr("cx", d => d.x)
 				.attr("cy", d => d.y);
-			
+
 			found_node.attr("cx", d => d.x)
 				.attr("cy", d => d.y);
 
